@@ -2,17 +2,18 @@
 
 import 'dart:developer';
 
+import 'package:cricket_management/controllers/page_controller.dart';
 import 'package:cricket_management/screens/HomeScreens/HomeScreen.dart';
 import 'package:cricket_management/screens/LiveScore/live_score_page.dart';
 import 'package:cricket_management/screens/Notification/notification_screen.dart';
 import 'package:cricket_management/screens/Settings/settings_page.dart';
 import 'package:cricket_management/screens/Statistics/tournament_statistics_screen.dart';
+import 'package:cricket_management/screens/Tournament/tournament_detail_screen.dart';
 import 'package:cricket_management/screens/Tournament/tournament_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-
-int selectedPageIndex = 0;
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({Key? key}) : super(key: key);
@@ -21,12 +22,48 @@ class DashboardScreen extends StatefulWidget {
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
+// Update controller initialization
 class _DashboardScreenState extends State<DashboardScreen>
     with SingleTickerProviderStateMixin {
+  final PageNavigationController pageController =
+      Get.put(PageNavigationController());
+
+  int selectedPageIndex = 0;
+
   // Animation Controller
   late AnimationController _controller;
   // Fade Animation
   late Animation<double> _fadeAnimation;
+
+  List<List> subPages = [
+    [
+      //HomePages
+    ],
+    [
+      // LiveScorePage
+    ],
+    [
+      // TournamentScreen
+      const TournamentDetailScreen(
+        tournament: {
+          'name': 'IPL 2024',
+          'image':
+              'https://assets.bcci.tv/bcci/photos/7000/04453927-87d4-4e7e-b938-d0e6c463bca8.jpg',
+          'teams': '10 ',
+          'duration': '2 Months'
+        },
+      ),
+    ],
+    [
+      // NotificationScreen
+    ],
+    [
+      // TournamentStatisticsScreen
+    ],
+    [
+      // SettingsPage
+    ],
+  ];
 
   List<Widget> pages = [
     const Homescreen(),
@@ -52,7 +89,6 @@ class _DashboardScreenState extends State<DashboardScreen>
         curve: Curves.easeIn,
       ),
     );
-
     _controller.forward();
   }
 
@@ -83,11 +119,16 @@ class _DashboardScreenState extends State<DashboardScreen>
           child: Row(
             children: [
               _buildNavigationBar(mq),
+              // Update the Expanded widget in build method
               Expanded(
                 child: Column(
                   children: [
-                    // _buildTopBar(mq),
-                    Expanded(child: pages[selectedPageIndex]),
+                    Expanded(
+                      child: Obx(() => (pageController.subIndex.value == -1)
+                          ? pages[pageController.index.value]
+                          : subPages[pageController.index.value]
+                              [pageController.subIndex.value]),
+                    )
                   ],
                 ),
               ),
@@ -103,7 +144,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     return Container(
       width: mq.size.width * 0.15,
       decoration: BoxDecoration(
-        gradient:const  LinearGradient(
+        gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
@@ -147,70 +188,46 @@ class _DashboardScreenState extends State<DashboardScreen>
           ),
 
           // Nav Items
+          // Update the nav items section
           Column(
             children: [
-              _buildNavItem(
-                icon: FontAwesomeIcons.home,
-                label: "Home",
-                selected: selectedPageIndex == 0,
-                onTap: () {
-                  setState(() {
-                    selectedPageIndex = 0;
-                  });
-                },
-              ),
-              _buildNavItem(
-                icon: FontAwesomeIcons.chartLine,
-                label: "Live Scores",
-                selected: selectedPageIndex == 1,
-                onTap: () {
-                  log("Live Scores");
-                  setState(() {
-                    selectedPageIndex = 1;
-                  });
-                },
-              ),
-              _buildNavItem(
-                icon: FontAwesomeIcons.gamepad,
-                label: "Tournaments",
-                selected: selectedPageIndex == 2,
-                onTap: () {
-                  setState(() {
-                    selectedPageIndex = 2;
-                  });
-                },
-              ),
-              _buildNavItem(
-                icon: FontAwesomeIcons.bell,
-                label: "Notifications",
-                selected: selectedPageIndex == 3,
-                onTap: () {
-                  setState(() {
-                    selectedPageIndex = 3;
-                  });
-                },
-                badge: "3", // Add notification count
-              ),
-              _buildNavItem(
-                icon: FontAwesomeIcons.envelope,
-                label: "Statistics ",
-                selected: selectedPageIndex == 4,
-                onTap: () {
-                  setState(() {
-                    selectedPageIndex = 4;
-                  });
-                },
-              ),
-              _buildNavItem(
-                icon: FontAwesomeIcons.cog,
-                label: "Settings",
-                selected: selectedPageIndex == 5,
-                onTap: () {
-                  setState(() {
-                    selectedPageIndex = 5;
-                  });
-                },
-              ),
+              Obx(() => _buildNavItem(
+                    icon: FontAwesomeIcons.home,
+                    label: "Home",
+                    selected: pageController.index.value == 0,
+                    onTap: () => pageController.navigateToMain(0),
+                  )),
+              Obx(() => _buildNavItem(
+                    icon: FontAwesomeIcons.chartLine,
+                    label: "Live Scores",
+                    selected: pageController.index.value == 1,
+                    onTap: () => pageController.navigateToMain(1),
+                  )),
+              Obx(() => _buildNavItem(
+                    icon: FontAwesomeIcons.gamepad,
+                    label: "Tournaments",
+                    selected: pageController.index.value == 2,
+                    onTap: () => pageController.navigateToMain(2),
+                  )),
+              Obx(() => _buildNavItem(
+                    icon: FontAwesomeIcons.bell,
+                    label: "Notifications",
+                    selected: pageController.index.value == 3,
+                    onTap: () => pageController.navigateToMain(3),
+                    badge: "3",
+                  )),
+              Obx(() => _buildNavItem(
+                    icon: FontAwesomeIcons.envelope,
+                    label: "Statistics ",
+                    selected: pageController.index.value == 4,
+                    onTap: () => pageController.navigateToMain(4),
+                  )),
+              Obx(() => _buildNavItem(
+                    icon: FontAwesomeIcons.cog,
+                    label: "Settings",
+                    selected: pageController.index.value == 5,
+                    onTap: () => pageController.navigateToMain(5),
+                  )),
             ],
           ),
 

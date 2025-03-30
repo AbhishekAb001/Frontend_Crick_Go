@@ -1,6 +1,8 @@
+import 'package:cricket_management/controllers/page_controller.dart';
 import 'package:cricket_management/screens/Tournament/tournament_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:animate_do/animate_do.dart';
 
@@ -10,6 +12,8 @@ class TournamentScreen extends StatefulWidget {
 }
 
 class _TournamentScreenState extends State<TournamentScreen> {
+  PageNavigationController _pageNavigationController =
+      Get.find<PageNavigationController>();
   String selectedFilter = 'Ongoing';
   late double width;
   late double height;
@@ -194,152 +198,146 @@ class _TournamentScreenState extends State<TournamentScreen> {
   Widget _buildTournamentCard(int index) {
     final tournament = tournaments[index];
     return FadeInUp(
-        delay: Duration(milliseconds: 100 * index),
-        child: MouseRegion(
-          cursor: SystemMouseCursors.click,
-          onEnter: (_) => setState(() => _isHovering[index] = true),
-          onExit: (_) => setState(() => _isHovering[index] = false),
-          child: GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => TournamentDetailScreen(
-                    tournament: tournament,
-                  ),
-                ),
-              );
-            },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              transform: _isHovering[index]
-                  ? (Matrix4.identity()..scale(1.03))
-                  : Matrix4.identity(),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                color: const Color(0xFF242730),
-                boxShadow: _isHovering[index]
-                    ? [
-                        BoxShadow(
-                          color: Colors.blue.withOpacity(0.5),
-                          blurRadius: 15,
-                          offset: Offset(0, 5),
+      delay: Duration(milliseconds: 100 * index),
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _isHovering[index] = true),
+        onExit: (_) => setState(() => _isHovering[index] = false),
+        child: GestureDetector(
+          onTap: () {
+            _pageNavigationController.navigateToSubWithData(2, 0, tournament);
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            transform: _isHovering[index]
+                ? (Matrix4.identity()..scale(1.03))
+                : Matrix4.identity(),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              color: const Color(0xFF242730),
+              boxShadow: _isHovering[index]
+                  ? [
+                      BoxShadow(
+                        color: Colors.blue.withOpacity(0.5),
+                        blurRadius: 15,
+                        offset: Offset(0, 5),
+                      ),
+                    ]
+                  : const [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 10,
+                        offset: Offset(0, 5),
+                      ),
+                    ],
+            ),
+            child: ElasticIn(
+              duration: Duration(milliseconds: 800),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.symmetric(
+                      vertical: width * 0.01,
+                      horizontal: width * 0.008,
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: width * 0.08,
+                          clipBehavior: Clip.antiAlias,
+                          height: width * 0.08,
+                          decoration: BoxDecoration(
+                            color: Colors.grey,
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: CachedNetworkImage(
+                            imageUrl: tournament['image']!,
+                            fit: BoxFit.cover,
+                            height: double.infinity,
+                            width: double.infinity,
+                          ),
                         ),
-                      ]
-                    : const [
-                        BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 10,
-                          offset: Offset(0, 5),
+                        SizedBox(width: width * 0.01),
+
+                        ///Details
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(
+                              width: width * 0.15,
+                              child: Text(
+                                tournament['name']!,
+                                style: GoogleFonts.poppins(
+                                  color: Colors.white,
+                                  fontSize: width * 0.01,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: height * 0.01),
+
+                            ///Date
+                            Text(
+                              "28-Mar-2022 To 30-Apr-2022",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: width * 0.008,
+                              ),
+                            ),
+                            SizedBox(height: height * 0.01),
+
+                            ///Location
+                            Text(
+                              "Location: India",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: width * 0.008,
+                              ),
+                            ),
+                            SizedBox(height: height * 0.01),
+
+                            ///Teams
+                            Text(
+                              "Teams :${tournament['teams']!} / 20",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: width * 0.008,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
-              ),
-              child: ElasticIn(
-                duration: Duration(milliseconds: 800),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.symmetric(
-                        vertical: width * 0.01,
-                        horizontal: width * 0.008,
+                    ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding: EdgeInsets.all(width * 0.008),
+                    height: width * 0.03,
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.only(
+                        topRight: Radius.circular(20),
+                        bottomLeft: Radius.circular(20),
                       ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: width * 0.08,
-                            clipBehavior: Clip.antiAlias,
-                            height: width * 0.08,
-                            decoration: BoxDecoration(
-                              color: Colors.grey,
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                            child: CachedNetworkImage(
-                              imageUrl: tournament['image']!,
-                              fit: BoxFit.cover,
-                              height: double.infinity,
-                              width: double.infinity,
-                            ),
-                          ),
-                          SizedBox(width: width * 0.01),
-
-                          ///Details
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SizedBox(
-                                width: width * 0.15,
-                                child: Text(
-                                  tournament['name']!,
-                                  style: GoogleFonts.poppins(
-                                    color: Colors.white,
-                                    fontSize: width * 0.01,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                              SizedBox(height: height * 0.01),
-
-                              ///Date
-                              Text(
-                                "28-Mar-2022 To 30-Apr-2022",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: width * 0.008,
-                                ),
-                              ),
-                              SizedBox(height: height * 0.01),
-
-                              ///Location
-                              Text(
-                                "Location: India",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: width * 0.008,
-                                ),
-                              ),
-                              SizedBox(height: height * 0.01),
-
-                              ///Teams
-                              Text(
-                                "Teams :${tournament['teams']!} / 20",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: width * 0.008,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
+                      color: Colors.lightBlue,
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      "Upcomming",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: width * 0.01,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const Spacer(),
-                    Container(
-                      padding: EdgeInsets.all(width * 0.008),
-                      height: width * 0.03,
-                      decoration: const BoxDecoration(
-                        borderRadius: BorderRadius.only(
-                          topRight: Radius.circular(20),
-                          bottomLeft: Radius.circular(20),
-                        ),
-                        color: Colors.lightBlue,
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        "Upcomming",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: width * 0.01,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    )
-                  ],
-                ),
+                  )
+                ],
               ),
             ),
           ),
-        ));
+        ),
+      ),
+    );
   }
 
   @override

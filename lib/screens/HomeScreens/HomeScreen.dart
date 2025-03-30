@@ -1,6 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:cricket_management/widgets/footer.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -44,6 +45,8 @@ class _HomescreenState extends State<Homescreen> {
               _buildNewsUpdates(mq),
               SizedBox(height: mq.size.height * 0.03),
               _buildRecentResults(mq),
+              SizedBox(height: mq.size.height * 0.03),
+              const Footer(),
             ],
           ),
         ),

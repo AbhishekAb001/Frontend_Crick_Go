@@ -9,75 +9,81 @@ class SettingsPage extends GetView<ThemeController> {
 
   @override
   Widget build(BuildContext context) {
-    final themeController = Get.put(ThemeController());
+    Get.put(ThemeController());
     final mq = MediaQuery.of(context);
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0A),
-      body: Stack(
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Theme.of(context).colorScheme.surface,
-                  Theme.of(context).scaffoldBackgroundColor,
-                ],
-              ),
-            ),
-          ),
-          SingleChildScrollView(
-            padding: EdgeInsets.symmetric(
-              horizontal: mq.size.width * 0.03,
-              vertical: mq.size.height * 0.04,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SlideInDown(
-                  child: Container(
-                    padding: EdgeInsets.all(mq.size.width * 0.02),
+    return Obx(() => Scaffold(
+          backgroundColor:
+              controller.isDarkMode ? const Color(0xFF0A0A0A) : Colors.white,
+          body: Stack(
+            children: [
+              Obx(() => Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                         colors: [
-                          Colors.blue.withOpacity(0.2),
-                          Colors.purple.withOpacity(0.2),
+                          controller.isDarkMode
+                              ? Theme.of(context).colorScheme.surface
+                              : Colors.blue[50]!,
+                          controller.isDarkMode
+                              ? Theme.of(context).scaffoldBackgroundColor
+                              : Colors.white,
                         ],
                       ),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.blue.withOpacity(0.3)),
                     ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.settings,
-                          color: Colors.blue,
-                          size: getSize(context, 2.5),
-                        ),
-                        SizedBox(width: mq.size.width * 0.01),
-                        Text(
-                          "Settings",
-                          style: GoogleFonts.poppins(
-                            fontSize: getSize(context, 2.5),
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  )),
+              SingleChildScrollView(
+                padding: EdgeInsets.symmetric(
+                  horizontal: mq.size.width * 0.03,
+                  vertical: mq.size.height * 0.04,
                 ),
-                SizedBox(height: mq.size.height * 0.04),
-                ...buildEnhancedSections(context),
-              ],
-            ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SlideInDown(
+                      child: Container(
+                        padding: EdgeInsets.all(mq.size.width * 0.02),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.blue.withOpacity(0.2),
+                              Colors.purple.withOpacity(0.2),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          border:
+                              Border.all(color: Colors.blue.withOpacity(0.3)),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.settings,
+                              color: Colors.blue,
+                              size: getSize(context, 2.5),
+                            ),
+                            SizedBox(width: mq.size.width * 0.01),
+                            Text(
+                              "Settings",
+                              style: GoogleFonts.poppins(
+                                fontSize: getSize(context, 2.5),
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: mq.size.height * 0.04),
+                    ...buildEnhancedSections(context),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
+        ));
   }
 
   double getSize(BuildContext context, double factor) =>
@@ -105,13 +111,13 @@ class SettingsPage extends GetView<ThemeController> {
           context,
           "Preferences",
           [
-            _buildEnhancedSwitchTile(
-              context,
-              "Dark Mode",
-              controller.isDarkMode,
-              Icons.dark_mode,
-              (val) => controller.toggleTheme(),
-            ),
+            Obx(() => _buildEnhancedSwitchTile(
+                  context,
+                  "Dark Mode",
+                  controller.isDarkMode,
+                  Icons.dark_mode,
+                  (val) => controller.toggleTheme(),
+                )),
             _buildEnhancedSwitchTile(
               context,
               "Notifications",
@@ -197,13 +203,14 @@ class SettingsPage extends GetView<ThemeController> {
             : null,
         trailing:
             Icon(Icons.arrow_forward_ios, color: Colors.blue.withOpacity(0.7)),
-        onTap: () => Get.toNamed('/${title.toLowerCase().replaceAll(' ', '_')}'),
+        onTap: () =>
+            Get.toNamed('/${title.toLowerCase().replaceAll(' ', '_')}'),
       ),
     );
   }
 
-  Widget _buildEnhancedSwitchTile(
-      BuildContext context, String title, bool value, IconData icon, Function(bool) onChanged) {
+  Widget _buildEnhancedSwitchTile(BuildContext context, String title,
+      bool value, IconData icon, Function(bool) onChanged) {
     return Container(
       margin: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
       decoration: BoxDecoration(
@@ -255,7 +262,8 @@ class SettingsPage extends GetView<ThemeController> {
             padding: EdgeInsets.all(MediaQuery.of(context).size.width * 0.02),
             child: Row(
               children: [
-                if (icon != null) ...[                  Icon(icon, color: Colors.white70, size: getSize(context, 2)),
+                if (icon != null) ...[
+                  Icon(icon, color: Colors.white70, size: getSize(context, 2)),
                   SizedBox(width: 10),
                 ],
                 Text(
@@ -307,7 +315,8 @@ class SettingsPage extends GetView<ThemeController> {
                   child: CircleAvatar(
                     radius: getSize(context, 4),
                     backgroundColor: Colors.transparent,
-                    backgroundImage: NetworkImage('https://resources.pulse.icc-cricket.com/ICC/photo/2024/02/08/3d7b5e7f-7f20-447d-8fb3-77dd252c9e98/Rohit-Sharma.jpg'),
+                    backgroundImage: NetworkImage(
+                        'https://resources.pulse.icc-cricket.com/ICC/photo/2024/02/08/3d7b5e7f-7f20-447d-8fb3-77dd252c9e98/Rohit-Sharma.jpg'),
                   ),
                 ),
                 Container(

@@ -1,3 +1,4 @@
+import 'package:cricket_management/widgets/footer.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:animate_do/animate_do.dart';
@@ -151,6 +152,8 @@ class _LiveScorePageState extends State<LiveScorePage>
                         SlideInRight(child: _buildStatsSection(size)),
                         SizedBox(height: size.height * 0.03),
                         FadeInUp(child: _buildCommentarySection(size)),
+              SizedBox(height: size.height * 0.02),
+              const Footer(),
                       ],
                     ),
                   ),
