@@ -1,13 +1,12 @@
 // ignore_for_file: deprecated_member_use
-
 import 'package:cricket_management/controllers/page_controller.dart';
 import 'package:cricket_management/screens/Tournament/subpages/leaderboard_page.dart';
 import 'package:cricket_management/screens/Tournament/subpages/matches_page.dart';
 import 'package:cricket_management/screens/Tournament/subpages/teams_page.dart';
-import 'package:cricket_management/screens/Tournament/subpages/points_table_page.dart';
 import 'package:cricket_management/screens/Tournament/subpages/statistics_page.dart';
 import 'package:cricket_management/screens/Tournament/subpages/gallery_page.dart';
 import 'package:cricket_management/screens/Tournament/subpages/about_page.dart';
+import 'package:cricket_management/widgets/points_table.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -33,7 +32,7 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
   List<Widget> contentPages = [
     const MatchesPage(),
     const TeamsPage(),
-    const PointsTablePage(),
+    const SizedBox(),
     const LeaderboardPage(),
     const StatisticsPage(),
     const GallaryPage(),
@@ -85,7 +84,9 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
               constraints: BoxConstraints(
                 minHeight: height * 0.8,
               ),
-              child: contentPages[selectedMenuIndex],
+              child: (selectedMenuIndex == 2)
+                  ? PointsTable.buildPointsTable(context)
+                  : contentPages[selectedMenuIndex],
             ),
           ],
         ),
@@ -304,21 +305,28 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFF1E1E1E),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            _buildHeader(),
-            SizedBox(height: height * 0.02),
-            _buildMenuBar(),
-            SizedBox(height: height * 0.02),
-            Container(
-              constraints: BoxConstraints(
-                minHeight: height * 0.8,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Column(
+                children: [
+                  _buildHeader(),
+                  SizedBox(height: height * 0.02),
+                  _buildMenuBar(),
+                  SizedBox(height: height * 0.02),
+                  Container(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight * 0.6, // Adjusted height
+                    ),
+                    child: contentPages[selectedMenuIndex],
+                  ),
+                ],
               ),
-              child: contentPages[selectedMenuIndex],
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

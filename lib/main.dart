@@ -1,7 +1,5 @@
-import 'package:cricket_management/screens/Tournament/tournament_screen.dart';
 import 'package:cricket_management/screens/splash_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'dart:async';
 import 'package:get/get.dart';
 import 'screens/login_screen.dart';
@@ -19,7 +17,7 @@ void main() {
     };
 
     runApp(CricketManagementApp());
-  }, (error, stackTrace) {  
+  }, (error, stackTrace) {
     // Catch any errors not caught by Flutter
     debugPrint('Uncaught error: $error');
     debugPrint('Stack trace: $stackTrace');

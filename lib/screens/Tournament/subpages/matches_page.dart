@@ -226,29 +226,7 @@ class _MatchesPageState extends State<MatchesPage>
     );
   }
 
-  Widget _buildTabBarItem(String label) {
-    return AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        padding: EdgeInsets.symmetric(
-          horizontal: width * 0.02,
-          vertical: height * 0.008,
-        ),
-        decoration: BoxDecoration(
-          color: _tabController.index == tabs.indexOf(label)
-              ? Colors.white.withOpacity(0.1)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          label,
-          style: GoogleFonts.poppins(
-            color: Colors.white,
-            fontSize: width * 0.012,
-            fontWeight: FontWeight.bold,
-          ),
-        ));
-  }
+ 
 
   Widget _buildLiveMatchCard(Map<String, dynamic> match) {
     return Container(
