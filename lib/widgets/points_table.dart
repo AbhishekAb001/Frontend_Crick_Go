@@ -1,76 +1,36 @@
+import 'dart:developer';
+
+import 'package:cricket_management/screens/Tournament/subpages/teams_page.dart';
+import 'package:cricket_management/screens/Tournament/tournament_screen.dart';
+import 'package:cricket_management/service/tournament/teams_service.dart';
 import 'package:cricket_management/widgets/footer.dart';
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
 
 class PointsTable {
+  static List<Map<String, dynamic>> teamStats = [];
+
+  static Future<void> _fetchTeams() async {
+    try {
+      await TeamsService().getTeams(tournamentId!).then((value) {
+        teamStats.clear();
+        teamStats.addAll(value);
+      });
+    } on Exception catch (e) {
+      log("Excption while : ${e.toString()}");
+    }
+  }
+
   static Widget buildPointsTable(BuildContext context) {
     // Hardcoded data for the points table
-    final List<Map<String, dynamic>> teamStats = [
-      {
-        'teamName': 'Astral XI',
-        'played': 10,
-        'won': 8,
-        'lost': 2,
-        'drawn': 0,
-        'tied': 0,
-        'nr': 0,
-        'nrr': '+1.684',
-        'for': '1507/166',
-        'against': '1326/179.2',
-        'points': 16,
-        'last5': 'W-W-W-W-W',
-        'logo':
-            'https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/MI/Logos/Roundbig/MIroundbig.png',
-      },
-      {
-        'teamName': 'Team Gauravs XI',
-        'played': 10,
-        'won': 8,
-        'lost': 2,
-        'drawn': 0,
-        'tied': 0,
-        'nr': 0,
-        'nrr': '+1.593',
-        'for': '1533/159.2',
-        'against': '1433/178.3',
-        'points': 16,
-        'last5': 'W-W-W-W-L',
-        'logo':
-            'https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/CSK/logos/Roundbig/CSKroundbig.png',
-      },
-      {
-        'teamName': 'Gladiators Cricket Club Vik',
-        'played': 10,
-        'won': 7,
-        'lost': 3,
-        'drawn': 0,
-        'tied': 0,
-        'nr': 0,
-        'nrr': '+0.691',
-        'for': '1532/165.5',
-        'against': '1443/168.5',
-        'points': 14,
-        'last5': 'W-W-W-L-L',
-        'logo':
-            'https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/RCB/Logos/Roundbig/RCBroundbig.png',
-      },
-      {
-        'teamName': 'Super Daddy Cricket11',
-        'played': 10,
-        'won': 6,
-        'lost': 4,
-        'drawn': 0,
-        'tied': 0,
-        'nr': 0,
-        'nrr': '+0.459',
-        'for': '1379/161.1',
-        'against': '1409/174',
-        'points': 12,
-        'last5': 'L-W-L-W-W',
-        'logo':
-            'https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/RR/Logos/Roundbig/RRroundbig.png',
-      },
-    ];
+
+    if (teams.isEmpty) {
+      _fetchTeams();
+      log("Teams from if $teamStats");
+    } else {
+      teamStats = teams;
+      log("Teams from else $teamStats");
+    }
 
     return Padding(
       padding: EdgeInsets.symmetric(
@@ -80,7 +40,8 @@ class PointsTable {
           FadeInUp(
             duration: const Duration(milliseconds: 600),
             child: Container(
-              width: MediaQuery.of(context).size.width - 16,
+              width:
+                  MediaQuery.of(context).size.width, // Changed from width - 16
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.05),
                 borderRadius: BorderRadius.circular(15),
@@ -94,7 +55,7 @@ class PointsTable {
                 child: Theme(
                   data: Theme.of(context).copyWith(
                     dividerColor: Colors.blue.withOpacity(0.1),
-                    dataTableTheme: DataTableThemeData(
+                    dataTableTheme: const DataTableThemeData(
                       headingTextStyle: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -105,18 +66,18 @@ class PointsTable {
                     ),
                   ),
                   child: DataTable(
-                    headingRowColor: MaterialStateProperty.all(
+                    headingRowColor: WidgetStateProperty.all(
                       Colors.blue.withOpacity(0.2),
                     ),
-                    dataRowColor: MaterialStateProperty.resolveWith<Color>(
-                      (Set<MaterialState> states) {
-                        if (states.contains(MaterialState.selected)) {
+                    dataRowColor: WidgetStateProperty.resolveWith<Color>(
+                      (Set<WidgetState> states) {
+                        if (states.contains(WidgetState.selected)) {
                           return Colors.blue.withOpacity(0.1);
                         }
                         return Colors.transparent;
                       },
                     ),
-                    columns: [
+                    columns: const [
                       DataColumn(label: Text('#')),
                       DataColumn(label: Text('Team')),
                       DataColumn(label: Text('M')),
@@ -137,14 +98,30 @@ class PointsTable {
                         cells: [
                           DataCell(Text(
                             '${index + 1}',
-                            style: TextStyle(color: Colors.white),
+                            style: const TextStyle(color: Colors.white),
                           )),
+                          // Team Name
                           DataCell(
                             Row(
                               children: [
+                                Container(
+                                  width: 24,
+                                  height: 24,
+                                  margin: const EdgeInsets.only(right: 8),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    image: DecorationImage(
+                                      image: NetworkImage(
+                                        teamStats[index]['teamLogo'] ??
+                                            'https://via.placeholder.com/24',
+                                      ),
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                ),
                                 Expanded(
                                   child: Text(
-                                    teamStats[index]['teamName'],
+                                    teamStats[index]['teamName'] ?? '',
                                     style: TextStyle(
                                       color: Colors.white,
                                       fontWeight: index < 4
@@ -157,47 +134,62 @@ class PointsTable {
                               ],
                             ),
                           ),
+                          // Matches
                           DataCell(Text(
-                            teamStats[index]['played'].toString(),
-                            style: TextStyle(color: Colors.white70),
+                            (teamStats[index]['matchesPlayed']?.toString() ??
+                                '0'),
+                            style: const TextStyle(color: Colors.white70),
                           )),
+                          // Wins
                           DataCell(Text(
-                            teamStats[index]['won'].toString(),
-                            style: TextStyle(color: Colors.green),
+                            (teamStats[index]['wins']?.toString() ?? '0'),
+                            style: const TextStyle(color: Colors.green),
                           )),
+                          // Losses
                           DataCell(Text(
-                            teamStats[index]['lost'].toString(),
-                            style: TextStyle(color: Colors.red),
+                            (teamStats[index]['losses']?.toString() ?? '0'),
+                            style: const TextStyle(color: Colors.red),
                           )),
+                          // Draws
                           DataCell(Text(
-                            teamStats[index]['drawn'].toString(),
-                            style: TextStyle(color: Colors.white70),
+                            (teamStats[index]['draws']?.toString() ?? '0'),
+                            style: const TextStyle(color: Colors.white70),
                           )),
+                          // Ties
                           DataCell(Text(
-                            teamStats[index]['tied'].toString(),
-                            style: TextStyle(color: Colors.white70),
+                            (teamStats[index]['ties']?.toString() ?? '0'),
+                            style: const TextStyle(color: Colors.white70),
                           )),
+                          // No Results
                           DataCell(Text(
-                            teamStats[index]['nr'].toString(),
-                            style: TextStyle(color: Colors.white70),
+                            (teamStats[index]['noResults']?.toString() ?? '0'),
+                            style: const TextStyle(color: Colors.white70),
                           )),
+                          // Net Run Rate
                           DataCell(Text(
-                            teamStats[index]['nrr'],
+                            teamStats[index]['netRunRate']?.toString() ??
+                                '0.00',
                             style: TextStyle(
-                              color: teamStats[index]['nrr'].startsWith('+')
-                                  ? Colors.green
-                                  : Colors.red,
+                              color:
+                                  (teamStats[index]['netRunRate']?.toString() ??
+                                              '0.00')
+                                          .startsWith('-')
+                                      ? Colors.red
+                                      : Colors.green,
                               fontWeight: FontWeight.bold,
                             ),
                           )),
+                          // For
                           DataCell(Text(
-                            teamStats[index]['for'],
-                            style: TextStyle(color: Colors.white70),
+                            teamStats[index]['runsFor']?.toString() ?? '0',
+                            style: const TextStyle(color: Colors.white70),
                           )),
+                          // Against
                           DataCell(Text(
-                            teamStats[index]['against'],
-                            style: TextStyle(color: Colors.white70),
+                            teamStats[index]['runsAgainst']?.toString() ?? '0',
+                            style: const TextStyle(color: Colors.white70),
                           )),
+                          // Points
                           DataCell(
                             Container(
                               padding: EdgeInsets.symmetric(
@@ -212,18 +204,20 @@ class PointsTable {
                                     MediaQuery.of(context).size.width * 0.03),
                               ),
                               child: Text(
-                                teamStats[index]['points'].toString(),
+                                teamStats[index]['points']?.toString() ?? '0',
                                 textAlign: TextAlign.center,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ),
                           ),
+                          // Last 5
                           DataCell(Text(
-                            teamStats[index]['last5'],
-                            style: TextStyle(color: Colors.white70),
+                            teamStats[index]['resultHistory']?.toString() ??
+                                '-',
+                            style: const TextStyle(color: Colors.white70),
                           )),
                         ],
                       ),

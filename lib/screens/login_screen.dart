@@ -1,8 +1,17 @@
+import 'dart:convert';
+import 'dart:developer';
+
+import 'package:cricket_management/controllers/profile_controller.dart';
+import 'package:cricket_management/service/auth_sharedP_service.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:http/http.dart' as http;
 
 class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
@@ -11,6 +20,10 @@ class _LoginScreenState extends State<LoginScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
+  final TextEditingController _userNameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  ProfileController profileController = Get.put(ProfileController());
+  bool _isPasswordVisible = false;
 
   @override
   void initState() {
@@ -96,6 +109,7 @@ class _LoginScreenState extends State<LoginScreen>
 
                     // Username Field
                     TextField(
+                      controller: _userNameController,
                       decoration: InputDecoration(
                         labelText: 'Username',
                         labelStyle: GoogleFonts.lato(color: Colors.white),
@@ -110,7 +124,8 @@ class _LoginScreenState extends State<LoginScreen>
 
                     // Password Field
                     TextField(
-                      obscureText: true,
+                      obscureText: !_isPasswordVisible,
+                      controller: _passwordController,
                       decoration: InputDecoration(
                         labelText: 'Password',
                         labelStyle: GoogleFonts.lato(color: Colors.white),
@@ -118,6 +133,19 @@ class _LoginScreenState extends State<LoginScreen>
                             borderRadius: BorderRadius.circular(10)),
                         filled: true,
                         fillColor: Colors.white.withOpacity(0.1),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _isPasswordVisible
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                            color: Colors.white70,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _isPasswordVisible = !_isPasswordVisible;
+                            });
+                          },
+                        ),
                       ),
                       style: GoogleFonts.lato(color: Colors.white),
                     ),
@@ -125,18 +153,16 @@ class _LoginScreenState extends State<LoginScreen>
 
                     // Animated Login Button
                     GestureDetector(
-                      onTap: () {
-                        Navigator.pushReplacementNamed(context, '/dashboard');
-                      },
+                      onTap:
+                          _isLoading ? null : login, // Disable tap when loading
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 300),
-                        // padding: EdgeInsets.symmetric(
-                        //     vertical: mq.size.width * 0.015,
-                        //     horizontal: mq.size.width * 0.01),
                         width: mq.size.width * 0.1,
                         height: mq.size.width * 0.03,
                         decoration: BoxDecoration(
-                          color: const Color.fromARGB(255, 219, 24, 24),
+                          color: _isLoading
+                              ? Colors.grey // Change color when loading
+                              : const Color.fromARGB(255, 219, 24, 24),
                           borderRadius: BorderRadius.circular(10),
                           boxShadow: [
                             BoxShadow(
@@ -147,11 +173,15 @@ class _LoginScreenState extends State<LoginScreen>
                           ],
                         ),
                         child: Center(
-                          child: Text(
-                            'Login',
-                            style: GoogleFonts.lato(
-                                fontSize: fontSize, color: Colors.white),
-                          ),
+                          child: _isLoading
+                              ? CircularProgressIndicator(
+                                  color: Colors.white,
+                                )
+                              : Text(
+                                  'Login',
+                                  style: GoogleFonts.lato(
+                                      fontSize: fontSize, color: Colors.white),
+                                ),
                         ),
                       ),
                     ),
@@ -227,5 +257,85 @@ class _LoginScreenState extends State<LoginScreen>
         ),
       ),
     );
+  }
+
+  bool _isLoading = false; // Add a loading state variable
+
+  void login() async {
+    AuthSharedP authSharedP = AuthSharedP();
+    setState(() {
+      _isLoading = true; // Set loading state to true
+    });
+
+    if (_userNameController.text.isNotEmpty &&
+        _passwordController.text.isNotEmpty) {
+      if (_userNameController.text == "admin") {
+        await authSharedP.setAdminStatus(true);
+        await authSharedP.getAdminStatus();
+      }
+      try {
+        final response = await http.post(
+          Uri.parse("http://localhost:8080/auth/login"),
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
+          },
+          body: jsonEncode(<String, dynamic>{
+            'username': _userNameController.text,
+            'password': _passwordController.text,
+          }),
+        );
+
+        if (response.statusCode == 200) {
+          // Handle successful response
+          Get.snackbar(
+            "Success",
+            "Logged in successfully",
+            backgroundColor: Colors.green,
+            colorText: Colors.white,
+            snackPosition: SnackPosition.BOTTOM,
+            duration: const Duration(seconds: 2),
+          );
+          authSharedP.setIsLoggedIn(true);
+          authSharedP.setProfileData(jsonDecode(response.body));
+          authSharedP.setValues(jsonDecode(response.body)['token'],
+              jsonDecode(response.body)['username']);
+
+          Navigator.pushNamed(context, '/dashboard');
+        } else {
+          // Handle error response
+          Get.snackbar(
+            "Error",
+            "Failed to login",
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+            snackPosition: SnackPosition.BOTTOM,
+            duration: Duration(seconds: 2),
+          );
+        }
+      } catch (e) {
+        log(e.toString());
+        Get.snackbar(
+          "Error",
+          "$e",
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM,
+          duration: Duration(seconds: 2),
+        );
+      }
+    } else {
+      Get.snackbar(
+        "Required",
+        "All Fields are required",
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+        duration: Duration(seconds: 2),
+      );
+    }
+
+    setState(() {
+      _isLoading = false; // Reset loading state
+    });
   }
 }

@@ -1,30 +1,75 @@
+import 'dart:convert';
+import 'dart:developer';
+
+import 'package:cricket_management/screens/Tournament/tournament_detail_screen.dart';
+import 'package:cricket_management/service/auth_sharedP_service.dart';
 import 'package:cricket_management/widgets/footer.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:http/http.dart' as http;
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class StatisticsPage extends StatefulWidget {
-  const StatisticsPage({Key? key}) : super(key: key);
+  const StatisticsPage({super.key});
 
   @override
   State<StatisticsPage> createState() => _StatisticsPageState();
 }
 
-class _StatisticsPageState extends State<StatisticsPage>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-  final List<String> tabs = ['OVERALL', 'MILESTONES'];
-
+class _StatisticsPageState extends State<StatisticsPage> {
   @override
   void initState() {
+    // TODO: implement initState
     super.initState();
-    _tabController = TabController(length: tabs.length, vsync: this);
+    _fetchStateById();
   }
 
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
+  Map<String, dynamic> state = {};
+
+  bool isLoading = false;
+
+  void _fetchStateById() async {
+    setState(() {
+      isLoading = true;
+    });
+    String? token = await AuthSharedP().getToken();
+    log("State id : ${tournament["statId"]}");
+    try {
+      http.Response response = await http.get(
+        Uri.parse(
+            "http://localhost:8080/stat/get?statId=${tournament["statId"]}"),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final decodedResponse = json.decode(response.body);
+        setState(() {
+          state = decodedResponse;
+          isLoading = false;
+        });
+        log("State: $decodedResponse");
+        log("MileStones string : ${state['mileStonesMap']}");
+        log("MileStones  : ${state['mileStones']}");
+        if (state['mileStonesMap'] != null && state['mileStonesMap'] is Map) {
+          state['mileStonesMap'].forEach((key, value) {
+            log('Milestone Key: $key, Value: $value');
+          });
+        }
+      } else {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      log("Exception while fetching state by id: $e");
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   @override
@@ -34,38 +79,37 @@ class _StatisticsPageState extends State<StatisticsPage>
 
     return Container(
       padding: EdgeInsets.symmetric(horizontal: width * 0.02),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Stats tabs
-          SizedBox(height: height * 0.025),
-
-          _buildTabBar(width, height),
-
-          SizedBox(height: height * 0.025),
-
-          // TabBarView with fixed height
-          SizedBox(
-            height: height * 0.7,
-            child: TabBarView(
-              controller: _tabController,
+      child: (isLoading)
+          ? Center(
+              child: LoadingAnimationWidget.staggeredDotsWave(
+                  color: Colors.blue, size: 25),
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // OVERALL tab content
-                _buildStatsContent(width, height),
-
-                // MILESTONES tab content
-                _buildMilestonesContent(width, height),
+                isLoading
+                    ? Center(child: CircularProgressIndicator())
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildStatsContent(width, height),
+                          SizedBox(height: height * 0.025),
+                          Text(
+                            'Tournament Milestones',
+                            style: GoogleFonts.poppins(
+                              color: Colors.white,
+                              fontSize: width * 0.02,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: height * 0.015),
+                          _buildMilestonesContent(width, height),
+                          SizedBox(height: height * 0.02),
+                          const Footer(),
+                        ],
+                      ),
               ],
             ),
-          ),
-
-          // Add spacing
-          SizedBox(height: height * 0.02),
-
-          // Add footer
-          const Footer(),
-        ],
-      ),
     );
   }
 
@@ -103,11 +147,15 @@ class _StatisticsPageState extends State<StatisticsPage>
             // First row of stats
             Row(
               children: [
-                _buildStatBox(width, height, '16', 'Matches'),
-                _buildStatBox(width, height, '58', 'Innings'),
-                _buildStatBox(width, height, '4654', 'Runs'),
-                _buildStatBox(width, height, '308', 'Wickets'),
-                _buildStatBox(width, height, '3618', 'Balls'),
+                _buildStatBox(
+                    width, height, state['matches'].toString(), 'Matches'),
+                _buildStatBox(
+                    width, height, state['innings'].toString(), 'Innings'),
+                _buildStatBox(width, height, state['runs'].toString(), 'Runs'),
+                _buildStatBox(
+                    width, height, state['wickets'].toString(), 'Wickets'),
+                _buildStatBox(
+                    width, height, state['balls'].toString(), 'Balls'),
               ],
             ),
 
@@ -116,11 +164,16 @@ class _StatisticsPageState extends State<StatisticsPage>
             // Second row of stats
             Row(
               children: [
-                _buildStatBox(width, height, '382', 'Extras'),
-                _buildStatBox(width, height, '375', 'Fours'),
-                _buildStatBox(width, height, '149', 'Sixes'),
-                _buildStatBox(width, height, '2', '50\'s'),
-                _buildStatBox(width, height, '0', '100\'s'),
+                _buildStatBox(
+                    width, height, state['extras'].toString(), 'Extras'),
+                _buildStatBox(
+                    width, height, state['fours'].toString(), 'Fours'),
+                _buildStatBox(
+                    width, height, state['sixes'].toString(), 'Sixes'),
+                _buildStatBox(
+                    width, height, state['fifties'].toString(), '50\'s'),
+                _buildStatBox(
+                    width, height, state['hundreds'].toString(), '100\'s'),
               ],
             ),
 
@@ -129,14 +182,18 @@ class _StatisticsPageState extends State<StatisticsPage>
             // Third row of stats
             Row(
               children: [
-                _buildStatBox(width, height, '9', '50+ Partnership',
+                _buildStatBox(
+                    width,
+                    height,
+                    state['fiftyPlusPartnerships'].toString(),
+                    '50+ Partnership',
                     isSmall: true),
-                _buildStatBox(width, height, '0', '100+ Partnership',
+                _buildStatBox(
+                    width,
+                    height,
+                    state['hundredPlusPartnerships'].toString(),
+                    '100+ Partnership',
                     isSmall: true),
-                _buildStatBox(width, height, '3', 'Maidens', isSmall: true),
-                _buildStatBox(width, height, '1537', 'Dot balls',
-                    isSmall: true),
-                _buildStatBox(width, height, '127', 'Catches', isSmall: true),
               ],
             ),
 
@@ -145,12 +202,18 @@ class _StatisticsPageState extends State<StatisticsPage>
             // Fourth row of stats
             Row(
               children: [
-                _buildStatBox(width, height, '31', 'Stumpings', isSmall: true),
-                _buildStatBox(width, height, '51.44', 'BDR%', isSmall: true),
-                _buildStatBox(width, height, '6.90', 'BDR Freq.',
+                _buildStatBox(
+                    width, height, state['stumpings'].toString(), 'Stumpings',
                     isSmall: true),
-                _buildStatBox(width, height, '2.35', 'DB Freq.', isSmall: true),
-                _buildStatBox(width, height, '42.48', 'DB%', isSmall: true),
+                _buildStatBox(
+                    width, height, state['catches'].toString(), 'Catches',
+                    isSmall: true),
+                _buildStatBox(
+                    width, height, state['dotBalls'].toString(), 'Dot balls',
+                    isSmall: true),
+                _buildStatBox(
+                    width, height, state['maidens'].toString(), 'Maidens',
+                    isSmall: true),
               ],
             ),
           ],
@@ -164,6 +227,10 @@ class _StatisticsPageState extends State<StatisticsPage>
     return FadeInUp(
       duration: const Duration(milliseconds: 800),
       child: Container(
+        constraints: BoxConstraints(
+          minHeight: height * 0.4,
+          maxHeight: height * 0.6,
+        ),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
@@ -189,112 +256,35 @@ class _StatisticsPageState extends State<StatisticsPage>
         padding: EdgeInsets.all(width * 0.02),
         child: ListView(
           physics: const BouncingScrollPhysics(),
-          children: [
-            _buildMilestone(
-              width,
-              'Fastest Fifty',
-              '21 balls by MS Dhoni',
-              Icons.speed,
-            ),
-            _buildMilestone(
-              width,
-              'Most Catches',
-              '6 catches by Ravindra Jadeja',
-              Icons.catching_pokemon,
-            ),
-            _buildMilestone(
-              width,
-              'Highest Individual Score',
-              '96 runs by Virat Kohli',
-              Icons.person_outline,
-            ),
-            _buildMilestone(
-              width,
-              'Best Economy Rate',
-              '6.25 by Jasprit Bumrah',
-              Icons.trending_down,
-            ),
-            _buildMilestone(
-              width,
-              'Most Sixes',
-              '12 sixes by Hardik Pandya',
-              Icons.sports_cricket,
-            ),
-            _buildMilestone(
-              width,
-              'Most Fours',
-              '14 fours by Rohit Sharma',
-              Icons.sports_cricket,
-            ),
-            _buildMilestone(
-              width,
-              'Best Bowling Figures',
-              '5/23 by Jasprit Bumrah',
-              Icons.sports_cricket,
-            ),
-            _buildMilestone(
-              width,
-              'Highest Partnership',
-              '112 runs by Rohit & Virat',
-              Icons.people,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTabBar(double width, double height) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(
-        tabs.length,
-        (index) => Padding(
-          padding: EdgeInsets.symmetric(horizontal: width * 0.01),
-          child: GestureDetector(
-            onTap: () {
-              setState(() {
-                _tabController.animateTo(index);
-              });
-            },
-            child: Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: width * 0.02,
-                vertical: height * 0.01,
-              ),
-              decoration: BoxDecoration(
-                color: _tabController.index == index
-                    ? Colors.white.withOpacity(0.1)
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: _tabController.index == index
-                      ? Colors.white.withOpacity(0.3)
-                      : Colors.white.withOpacity(0.1),
-                  width: 1,
-                ),
-              ),
-              child: Text(
-                tabs[index],
-                style: GoogleFonts.poppins(
-                  color: _tabController.index == index
-                      ? Colors.white
-                      : Colors.white.withOpacity(0.7),
-                  fontSize: width * 0.012,
-                  fontWeight: _tabController.index == index
-                      ? FontWeight.bold
-                      : FontWeight.normal,
-                ),
-              ),
-            ),
-          ),
+          children: (state['mileStonesMap'] != null &&
+                  state['mileStonesMap'] is Map)
+              ? (state['mileStonesMap'] as Map).entries.map<Widget>((entry) {
+                  return _buildMilestone(
+                    width,
+                    entry.key,
+                    entry.value,
+                    Icons.sports_cricket,
+                  );
+                }).toList()
+              : [
+                  Center(
+                    child: Text(
+                      'No milestones available',
+                      style: GoogleFonts.poppins(
+                        color: Colors.white,
+                        fontSize: width * 0.02,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
         ),
       ),
     );
   }
 
   Widget _buildStatBox(double width, double height, String value, String label,
-      {bool isSmall = false, LinearGradient? gradient}) {
+      {bool isSmall = false}) {
     return Expanded(
       child: Container(
         margin: EdgeInsets.symmetric(

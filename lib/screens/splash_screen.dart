@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
+import '../service/auth_sharedP_service.dart'; // Import the AuthSharedP service
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -15,6 +16,7 @@ class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
+  final AuthSharedP _authSharedP = AuthSharedP(); // Initialize AuthSharedP
 
   @override
   void initState() {
@@ -27,10 +29,15 @@ class _SplashScreenState extends State<SplashScreen>
 
     _fadeController.forward();
 
-    // Navigate to Login Screen after 5 seconds
-    // Timer(const Duration(seconds: 5), () {
-    //   Navigator.pushReplacementNamed(context, "/login");
-    // });
+    // Check login status using AuthSharedP
+    _checkLoginStatus();
+  }
+
+  Future<void> _checkLoginStatus() async {
+    bool isLoggedIn = await _authSharedP.isLogged();
+    if (isLoggedIn) {
+      Navigator.pushReplacementNamed(context, '/dashboard');
+    }
   }
 
   @override
@@ -92,7 +99,7 @@ class _SplashScreenState extends State<SplashScreen>
                       TypewriterAnimatedText(
                         textStyle: GoogleFonts.lato(
                           fontSize: screenWidth * 0.015,
-                          color: Color.fromARGB(179, 215, 102, 9),
+                          color: const Color.fromARGB(179, 215, 102, 9),
                           fontWeight: FontWeight.w400,
                         ),
                         'Manage your cricket team effortlessly!',
@@ -101,7 +108,7 @@ class _SplashScreenState extends State<SplashScreen>
                       TypewriterAnimatedText(
                         textStyle: GoogleFonts.lato(
                           fontSize: screenWidth * 0.015,
-                          color: Color.fromARGB(179, 18, 205, 77),
+                          color: const Color.fromARGB(179, 18, 205, 77),
                           fontWeight: FontWeight.w400,
                         ),
                         'Track player performance and statistics.',
@@ -110,7 +117,7 @@ class _SplashScreenState extends State<SplashScreen>
                       TypewriterAnimatedText(
                         textStyle: GoogleFonts.lato(
                           fontSize: screenWidth * 0.015,
-                          color: Color.fromARGB(179, 45, 112, 221),
+                          color: const Color.fromARGB(179, 45, 112, 221),
                           fontWeight: FontWeight.w400,
                         ),
                         'Plan tournaments with ease!',
@@ -127,7 +134,7 @@ class _SplashScreenState extends State<SplashScreen>
                       Navigator.pushNamed(context, "/login");
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color.fromARGB(225, 228, 2, 2),
+                      backgroundColor: const Color.fromARGB(225, 228, 2, 2),
                       padding: EdgeInsets.symmetric(
                           horizontal: screenWidth * 0.02,
                           vertical: screenHeight * 0.02),

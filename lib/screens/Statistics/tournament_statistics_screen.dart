@@ -12,10 +12,13 @@ class TournamentStatisticsScreen extends StatelessWidget {
     'totalTeams': 156,
     'totalMatches': 486,
     'popularTournaments': [
-      {'name': 'IPL 2024', 'viewCount': 25000},
-      {'name': 'World Cup 2023', 'viewCount': 22000},
-      {'name': 'Asia Cup 2023', 'viewCount': 18000},
-      {'name': 'BBL 2023', 'viewCount': 15000},
+      {'name': 'Local T20 Championship', 'viewCount': 180},
+      {'name': 'District Premier League', 'viewCount': 150},
+      {'name': 'State Cricket Trophy', 'viewCount': 170},
+      {'name': 'Village Cricket Cup', 'viewCount': 120},
+      {'name': 'Colony League 2024', 'viewCount': 130},
+      {'name': 'Township Super League', 'viewCount': 110},
+      {'name': 'Community Cricket Bash', 'viewCount': 190}
     ],
     'tournamentsByMonth': [
       {'month': 'Jan', 'count': 2},
@@ -27,7 +30,7 @@ class TournamentStatisticsScreen extends StatelessWidget {
     ],
   };
 
-  TournamentStatisticsScreen({Key? key}) : super(key: key);
+  TournamentStatisticsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -76,7 +79,10 @@ class TournamentStatisticsScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 20),
-        ...tournamentStats['popularTournaments'].asMap().entries.map<Widget>((entry) {
+        ...tournamentStats['popularTournaments']
+            .asMap()
+            .entries
+            .map<Widget>((entry) {
           final tournament = entry.value;
           return FadeInUp(
             duration: Duration(milliseconds: 400 + ((entry.key * 100) as int)),
@@ -132,10 +138,14 @@ class TournamentStatisticsScreen extends StatelessWidget {
       mainAxisSpacing: 20,
       childAspectRatio: 1.5,
       children: [
-        _buildStatCard('Total Tournaments', tournamentStats['totalTournaments'], Icons.emoji_events),
-        _buildStatCard('Active Tournaments', tournamentStats['activeTournaments'], Icons.sports_cricket),
-        _buildStatCard('Total Teams', tournamentStats['totalTeams'], Icons.group),
-        _buildStatCard('Total Matches', tournamentStats['totalMatches'], Icons.sports),
+        _buildStatCard('Total Tournaments', tournamentStats['totalTournaments'],
+            Icons.emoji_events),
+        _buildStatCard('Active Tournaments',
+            tournamentStats['activeTournaments'], Icons.sports_cricket),
+        _buildStatCard(
+            'Total Teams', tournamentStats['totalTeams'], Icons.group),
+        _buildStatCard(
+            'Total Matches', tournamentStats['totalMatches'], Icons.sports),
       ],
     );
   }
@@ -145,7 +155,10 @@ class TournamentStatisticsScreen extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.blue.withOpacity(0.2), Colors.purple.withOpacity(0.2)],
+          colors: [
+            Colors.blue.withOpacity(0.2),
+            Colors.purple.withOpacity(0.2)
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -190,20 +203,25 @@ class TournamentStatisticsScreen extends StatelessWidget {
         LineChartData(
           gridData: const FlGridData(show: false),
           titlesData: FlTitlesData(
-            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            topTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            leftTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
             bottomTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
                 reservedSize: 30,
                 interval: 1,
                 getTitlesWidget: (value, meta) {
-                  if (value.toInt() >= tournamentStats['tournamentsByMonth'].length) {
+                  if (value.toInt() >=
+                      tournamentStats['tournamentsByMonth'].length) {
                     return const Text('');
                   }
                   return Text(
-                    tournamentStats['tournamentsByMonth'][value.toInt()]['month'],
+                    tournamentStats['tournamentsByMonth'][value.toInt()]
+                        ['month'],
                     style: const TextStyle(color: Colors.white70),
                   );
                 },
@@ -217,7 +235,8 @@ class TournamentStatisticsScreen extends StatelessWidget {
                 tournamentStats['tournamentsByMonth'].length,
                 (index) => FlSpot(
                   index.toDouble(),
-                  tournamentStats['tournamentsByMonth'][index]['count'].toDouble(),
+                  tournamentStats['tournamentsByMonth'][index]['count']
+                      .toDouble(),
                 ),
               ),
               isCurved: true,

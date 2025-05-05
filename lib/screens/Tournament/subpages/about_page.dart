@@ -1,10 +1,12 @@
+import 'package:cricket_management/controllers/page_controller.dart';
 import 'package:cricket_management/widgets/footer.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:get/get.dart';
 
 class AboutPage extends StatefulWidget {
-  const AboutPage({Key? key}) : super(key: key);
+  const AboutPage({super.key});
 
   @override
   State<AboutPage> createState() => _AboutPageState();
@@ -13,46 +15,14 @@ class AboutPage extends StatefulWidget {
 class _AboutPageState extends State<AboutPage> {
   late double width;
   late double height;
+  PageNavigationController pageController = Get.find();
+  Map<String, dynamic> tournamentInfo = {};
 
-  // Sample tournament data - in a real app, this would come from an API or database
-  final Map<String, dynamic> tournamentInfo = {
-    'description':
-        'The Premier Cricket League (PCL) is an annual cricket tournament featuring the top teams from across the country. The tournament follows a round-robin format followed by knockout stages to determine the champion.',
-    'organizer': 'National Cricket Association',
-    'venue': 'Multiple stadiums across the country',
-    'prize': '₹50,00,000',
-    'rules': [
-      'Each match will be played for 20 overs per side',
-      'Power play rules as per international T20 standards',
-      'DRS (Decision Review System) available for all matches',
-      'Super Over will decide the winner in case of a tie',
-      'Points: Win (2), Tie/No Result (1), Loss (0)',
-      'Top 4 teams qualify for playoffs',
-      'All ICC rules and regulations apply',
-    ],
-    'timeline': [
-      {'date': '15 Mar 2024', 'event': 'Team Registration Deadline'},
-      {'date': '18 Mar 2024', 'event': 'Team Auction'},
-      {'date': '20 Mar 2024', 'event': 'Opening Ceremony'},
-      {'date': '22 Mar 2024', 'event': 'First Match'},
-      {'date': '10 Apr 2024', 'event': 'Last League Match'},
-      {'date': '12 Apr 2024', 'event': 'Qualifier 1'},
-      {'date': '13 Apr 2024', 'event': 'Eliminator'},
-      {'date': '14 Apr 2024', 'event': 'Qualifier 2'},
-      {'date': '16 Apr 2024', 'event': 'Final'},
-      {'date': '17 Apr 2024', 'event': 'Closing Ceremony'},
-    ],
-    'contact': {
-      'email': 'info@premiercricketleague.com',
-      'phone': '+91 9876543210',
-      'website': 'www.premiercricketleague.com',
-      'social': {
-        'twitter': '@PremierCricketLeague',
-        'instagram': '@pcl_official',
-        'facebook': 'PremierCricketLeagueOfficial',
-      },
-    },
-  };
+  @override
+  void initState() {
+    super.initState();
+    tournamentInfo = Map<String, dynamic>.from(pageController.data);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -124,7 +94,7 @@ class _AboutPageState extends State<AboutPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              tournamentInfo['description'],
+              tournamentInfo['description'] ?? '',
               style: GoogleFonts.poppins(
                 color: Colors.white70,
                 fontSize: width * 0.01,
@@ -138,7 +108,7 @@ class _AboutPageState extends State<AboutPage> {
                   child: _buildInfoItem(
                     Icons.people,
                     "Organizer",
-                    tournamentInfo['organizer'],
+                    tournamentInfo['organizer'] ?? '',
                   ),
                 ),
                 SizedBox(width: width * 0.02),
@@ -146,7 +116,7 @@ class _AboutPageState extends State<AboutPage> {
                   child: _buildInfoItem(
                     Icons.location_on,
                     "Venue",
-                    tournamentInfo['venue'],
+                    tournamentInfo['venue'] ?? '',
                   ),
                 ),
                 SizedBox(width: width * 0.02),
@@ -154,7 +124,7 @@ class _AboutPageState extends State<AboutPage> {
                   child: _buildInfoItem(
                     Icons.emoji_events,
                     "Prize Pool",
-                    tournamentInfo['prize'],
+                    "\$${tournamentInfo['prizePool']?.toString() ?? '0'}",
                   ),
                 ),
               ],
@@ -271,6 +241,13 @@ class _AboutPageState extends State<AboutPage> {
   }
 
   Widget _buildTimelineSection() {
+    final timelines = tournamentInfo['timelines'] as Map<String, dynamic>?;
+    if (timelines == null) return const SizedBox();
+
+    // Convert timeline map to sorted list
+    final timelineList = timelines.entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+
     return FadeInUp(
       duration: const Duration(milliseconds: 900),
       child: Container(
@@ -285,72 +262,63 @@ class _AboutPageState extends State<AboutPage> {
           ),
         ),
         child: Column(
-          children: [
-            for (int i = 0; i < tournamentInfo['timeline'].length; i++)
-              _buildTimelineItem(
-                tournamentInfo['timeline'][i]['date'],
-                tournamentInfo['timeline'][i]['event'],
-                i == tournamentInfo['timeline'].length - 1,
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTimelineItem(String date, String event, bool isLast) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(width: width * 0.01),
-        Column(
-          children: [
-            Container(
-              width: width * 0.015,
-              height: width * 0.015,
-              decoration: BoxDecoration(
-                color: Colors.amber.withOpacity(0.2),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.amber,
-                  width: 2,
-                ),
+          children: List.generate(
+            timelineList.length,
+            (index) => Padding(
+              padding: EdgeInsets.only(bottom: height * 0.02),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Timeline dot and line
+                  Column(
+                    children: [
+                      Container(
+                        width: width * 0.015,
+                        height: width * 0.015,
+                        decoration: BoxDecoration(
+                          color: Colors.amber,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      if (index != timelineList.length - 1)
+                        Container(
+                          width: 2,
+                          height: height * 0.04,
+                          color: Colors.amber.withOpacity(0.3),
+                        ),
+                    ],
+                  ),
+                  SizedBox(width: width * 0.02),
+                  // Timeline content
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          timelineList[index].key,
+                          style: GoogleFonts.poppins(
+                            color: Colors.amber,
+                            fontSize: width * 0.01,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: height * 0.005),
+                        Text(
+                          timelineList[index].value,
+                          style: GoogleFonts.poppins(
+                            color: Colors.white70,
+                            fontSize: width * 0.01,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
-            if (!isLast)
-              Container(
-                width: 2,
-                height: height * 0.04,
-                color: Colors.amber.withOpacity(0.3),
-              ),
-          ],
-        ),
-        SizedBox(width: width * 0.02),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                date,
-                style: GoogleFonts.poppins(
-                  color: Colors.amber,
-                  fontSize: width * 0.01,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              Text(
-                event,
-                style: GoogleFonts.poppins(
-                  color: Colors.white,
-                  fontSize: width * 0.012,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              SizedBox(height: isLast ? 0 : height * 0.01),
-            ],
           ),
         ),
-      ],
+      ),
     );
   }
 
@@ -377,7 +345,7 @@ class _AboutPageState extends State<AboutPage> {
                   child: _buildContactItem(
                     Icons.email,
                     "Email",
-                    tournamentInfo['contact']['email'],
+                    tournamentInfo['email'] ?? 'N/A',
                     Colors.green,
                   ),
                 ),
@@ -386,7 +354,7 @@ class _AboutPageState extends State<AboutPage> {
                   child: _buildContactItem(
                     Icons.phone,
                     "Phone",
-                    tournamentInfo['contact']['phone'],
+                    tournamentInfo['phone'] ?? 'N/A',
                     Colors.green,
                   ),
                 ),
@@ -395,7 +363,7 @@ class _AboutPageState extends State<AboutPage> {
                   child: _buildContactItem(
                     Icons.language,
                     "Website",
-                    tournamentInfo['contact']['website'],
+                    tournamentInfo['website'] ?? 'N/A',
                     Colors.green,
                   ),
                 ),
@@ -413,11 +381,16 @@ class _AboutPageState extends State<AboutPage> {
             SizedBox(height: height * 0.01),
             Row(
               children: [
-                _buildSocialItem(Icons.facebook, "Facebook", Colors.blue),
-                SizedBox(width: width * 0.01),
-                _buildSocialItem(Icons.camera_alt, "Instagram", Colors.pink),
-                SizedBox(width: width * 0.01),
-                _buildSocialItem(Icons.message, "Twitter", Colors.lightBlue),
+                if (tournamentInfo['facebook']?.isNotEmpty ?? false)
+                  _buildSocialItem(Icons.facebook, "Facebook", Colors.blue),
+                if (tournamentInfo['instagram']?.isNotEmpty ?? false) ...[
+                  SizedBox(width: width * 0.01),
+                  _buildSocialItem(Icons.camera_alt, "Instagram", Colors.pink),
+                ],
+                if (tournamentInfo['twitter']?.isNotEmpty ?? false) ...[
+                  SizedBox(width: width * 0.01),
+                  _buildSocialItem(Icons.message, "Twitter", Colors.lightBlue),
+                ],
               ],
             ),
           ],

@@ -14,14 +14,15 @@ import 'package:animate_do/animate_do.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 class TournamentDetailScreen extends StatefulWidget {
-  final Map<String, String> tournament;
-
-  const TournamentDetailScreen({Key? key, required this.tournament})
-      : super(key: key);
+  const TournamentDetailScreen({
+    super.key,
+  });
 
   @override
   State<TournamentDetailScreen> createState() => _TournamentDetailScreenState();
 }
+
+Map<String, dynamic> tournament = {};
 
 class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
   late double width;
@@ -36,7 +37,7 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
     const LeaderboardPage(),
     const StatisticsPage(),
     const GallaryPage(),
-    const AboutPage(),
+    AboutPage(),
   ];
 
   final List<Map<String, dynamic>> matches = [
@@ -65,6 +66,11 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
           'https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/RR/Logos/Roundbig/RRroundbig.png',
     },
   ];
+  @override
+  void initState() {
+    super.initState();
+    tournament = _pageController.data;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -130,7 +136,7 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
                   ).createShader(rect);
                 },
                 child: Image.network(
-                  widget.tournament['image'] ?? 'default_image_url',
+                  tournament['imageUrl'] ?? 'default_image_url',
                   fit: BoxFit.cover,
                 ),
               ),
@@ -163,9 +169,11 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
                   SizedBox(width: width * 0.02),
                   _buildTournamentInfo(),
                   const Spacer(),
-                  _buildStatCard("22", "Total\nMatches", Colors.blue),
+                  _buildStatCard(tournament["totalMatches"].toString(),
+                      "Total\nMatches", Colors.blue),
                   SizedBox(width: width * 0.02),
-                  _buildStatCard("8", "Teams\nParticipating", Colors.purple),
+                  _buildStatCard(tournament["totalTeams"].toString(),
+                      "Teams\nParticipating", Colors.purple),
                   SizedBox(width: width * 0.02),
                 ],
               ),
@@ -195,7 +203,7 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(15),
         child: CachedNetworkImage(
-          imageUrl: widget.tournament['image'] ?? 'default_image_url',
+          imageUrl: tournament['imageUrl'] ?? 'default_image_url',
           fit: BoxFit.cover,
           placeholder: (context, url) => const Center(
             child: CircularProgressIndicator(color: Colors.white),
@@ -211,7 +219,7 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          widget.tournament['name'] ?? 'Tournament Name',
+          tournament['name'] ?? 'Tournament Name',
           style: GoogleFonts.poppins(
             color: Colors.white,
             fontSize: width * 0.02, // Reduced from 0.03
@@ -227,7 +235,7 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
                 size: width * 0.012), // Reduced from 0.015
             SizedBox(width: width * 0.004), // Reduced from 0.005
             Text(
-              widget.tournament['location'] ?? 'Location not specified',
+              tournament['location'] ?? 'Location not specified',
               style: GoogleFonts.poppins(
                 color: Colors.white70,
                 fontSize: width * 0.01, // Reduced from 0.015
@@ -243,13 +251,21 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
                 size: width * 0.012), // Reduced from 0.015
             SizedBox(width: width * 0.004), // Reduced from 0.005
             Text(
-              "22nd March 2024 - 25th March 2024",
+              "${tournament['startDate']?.split('T')[0]} - ${tournament['endDate']?.split('T')[0]}",
               style: GoogleFonts.poppins(
                 color: Colors.white70,
                 fontSize: width * 0.01, // Reduced from 0.015
               ),
             ),
           ],
+        ),
+        SizedBox(height: height * 0.008), // Reduced from 0.01
+        Text(
+          "Overs : ${tournament['totalOver'].toString()}" ?? "Overs not specified",
+          style: GoogleFonts.poppins(
+            color: Colors.white70,
+            fontSize: width * 0.01, // Reduced from 0.015
+          ),
         ),
       ],
     );
@@ -395,6 +411,328 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // Add this method at the end of the class
+  void _showAddTournamentDialog(BuildContext context) {
+    final formKey = GlobalKey<FormState>();
+
+    // Form controllers
+    final descriptionController = TextEditingController();
+    final organizerController = TextEditingController();
+    final venueController = TextEditingController();
+    final prizeController = TextEditingController();
+    final emailController = TextEditingController();
+    final phoneController = TextEditingController();
+    final websiteController = TextEditingController();
+
+    // Rules list
+    List<String> rules = [''];
+
+    // Timeline list
+    List<Map<String, String>> timeline = [
+      {'date': '', 'event': ''}
+    ];
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF2A2A2A),
+        title: Text(
+          'Add Tournament Information',
+          style: GoogleFonts.poppins(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: SizedBox(
+          width: width * 0.6,
+          height: height * 0.8,
+          child: SingleChildScrollView(
+            child: Form(
+              key: formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildDialogSectionTitle('Basic Information'),
+                  _buildDialogTextField(
+                    controller: descriptionController,
+                    label: 'Tournament Description',
+                    maxLines: 3,
+                  ),
+                  SizedBox(height: height * 0.02),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildDialogTextField(
+                          controller: organizerController,
+                          label: 'Organizer',
+                        ),
+                      ),
+                      SizedBox(width: width * 0.01),
+                      Expanded(
+                        child: _buildDialogTextField(
+                          controller: venueController,
+                          label: 'Venue',
+                        ),
+                      ),
+                      SizedBox(width: width * 0.01),
+                      Expanded(
+                        child: _buildDialogTextField(
+                          controller: prizeController,
+                          label: 'Prize Pool',
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  SizedBox(height: height * 0.03),
+                  _buildDialogSectionTitle('Tournament Rules'),
+
+                  // Dynamic rules list
+                  StatefulBuilder(
+                    builder: (context, setState) {
+                      return Column(
+                        children: [
+                          for (int i = 0; i < rules.length; i++)
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _buildDialogTextField(
+                                    label: 'Rule ${i + 1}',
+                                    onChanged: (value) {
+                                      rules[i] = value;
+                                    },
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.remove_circle,
+                                    color: Colors.red,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      if (rules.length > 1) {
+                                        rules.removeAt(i);
+                                      }
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                          SizedBox(height: height * 0.01),
+                          TextButton.icon(
+                            icon: const Icon(Icons.add, color: Colors.blue),
+                            label: Text(
+                              'Add Rule',
+                              style: GoogleFonts.poppins(color: Colors.blue),
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                rules.add('');
+                              });
+                            },
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+
+                  SizedBox(height: height * 0.03),
+                  _buildDialogSectionTitle('Tournament Timeline'),
+
+                  // Dynamic timeline list
+                  StatefulBuilder(
+                    builder: (context, setState) {
+                      return Column(
+                        children: [
+                          for (int i = 0; i < timeline.length; i++)
+                            Row(
+                              children: [
+                                Expanded(
+                                  flex: 2,
+                                  child: _buildDialogTextField(
+                                    label: 'Date',
+                                    onChanged: (value) {
+                                      timeline[i]['date'] = value;
+                                    },
+                                  ),
+                                ),
+                                SizedBox(width: width * 0.01),
+                                Expanded(
+                                  flex: 3,
+                                  child: _buildDialogTextField(
+                                    label: 'Event',
+                                    onChanged: (value) {
+                                      timeline[i]['event'] = value;
+                                    },
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.remove_circle,
+                                    color: Colors.red,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      if (timeline.length > 1) {
+                                        timeline.removeAt(i);
+                                      }
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                          SizedBox(height: height * 0.01),
+                          TextButton.icon(
+                            icon: const Icon(Icons.add, color: Colors.blue),
+                            label: Text(
+                              'Add Timeline Event',
+                              style: GoogleFonts.poppins(color: Colors.blue),
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                timeline.add({'date': '', 'event': ''});
+                              });
+                            },
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+
+                  SizedBox(height: height * 0.03),
+                  _buildDialogSectionTitle('Contact Information'),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildDialogTextField(
+                          controller: emailController,
+                          label: 'Email',
+                        ),
+                      ),
+                      SizedBox(width: width * 0.01),
+                      Expanded(
+                        child: _buildDialogTextField(
+                          controller: phoneController,
+                          label: 'Phone',
+                        ),
+                      ),
+                      SizedBox(width: width * 0.01),
+                      Expanded(
+                        child: _buildDialogTextField(
+                          controller: websiteController,
+                          label: 'Website',
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.poppins(color: Colors.white70),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+            ),
+            onPressed: () {
+              if (formKey.currentState!.validate()) {
+                // Here you would save the tournament data
+                // For now, we'll just print it
+                print('Tournament data saved:');
+                print('Description: ${descriptionController.text}');
+                print('Organizer: ${organizerController.text}');
+                print('Venue: ${venueController.text}');
+                print('Prize: ${prizeController.text}');
+                print('Rules: $rules');
+                print('Timeline: $timeline');
+                print('Email: ${emailController.text}');
+                print('Phone: ${phoneController.text}');
+                print('Website: ${websiteController.text}');
+
+                Navigator.pop(context);
+
+                // Show success message
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Tournament information added successfully!'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              }
+            },
+            child: Text(
+              'Save',
+              style: GoogleFonts.poppins(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDialogSectionTitle(String title) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: height * 0.01),
+      child: Text(
+        title,
+        style: GoogleFonts.poppins(
+          color: Colors.blue,
+          fontSize: width * 0.012,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDialogTextField({
+    TextEditingController? controller,
+    required String label,
+    int maxLines = 1,
+    Function(String)? onChanged,
+  }) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: height * 0.01),
+      child: TextFormField(
+        controller: controller,
+        onChanged: onChanged,
+        maxLines: maxLines,
+        style: GoogleFonts.poppins(color: Colors.white),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: GoogleFonts.poppins(color: Colors.white70),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Colors.white24),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Colors.white24),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Colors.blue),
+          ),
+          filled: true,
+          fillColor: Colors.white.withOpacity(0.05),
+        ),
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Please enter $label';
+          }
+          return null;
+        },
       ),
     );
   }

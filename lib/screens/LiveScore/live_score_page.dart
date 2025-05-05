@@ -1,10 +1,28 @@
+import 'package:cricket_management/controllers/page_controller.dart';
 import 'package:cricket_management/widgets/footer.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:animate_do/animate_do.dart';
 import 'dart:ui';
 import 'dart:math' as math;
 import 'package:cached_network_image/cached_network_image.dart';
+
+class Player {
+  final String name;
+  final String localName;
+  final String role;
+  final String team;
+  final String imageUrl;
+
+  Player({
+    required this.name,
+    required this.localName,
+    required this.role,
+    required this.team,
+    required this.imageUrl,
+  });
+}
 
 class LiveMatch {
   final String team1;
@@ -14,6 +32,17 @@ class LiveMatch {
   final String matchStatus;
   final String team1Logo;
   final String team2Logo;
+  final String tournamentName;
+  final String venue;
+  final String matchType;
+  final List<Player> team1Players;
+  final List<Player> team2Players;
+  final String currentBatsman1;
+  final String currentBatsman2;
+  final String currentBowler;
+  final String currentBatsman1Local;
+  final String currentBatsman2Local;
+  final String currentBowlerLocal;
 
   LiveMatch({
     required this.team1,
@@ -23,11 +52,22 @@ class LiveMatch {
     required this.matchStatus,
     required this.team1Logo,
     required this.team2Logo,
+    required this.tournamentName,
+    required this.venue,
+    required this.matchType,
+    required this.team1Players,
+    required this.team2Players,
+    required this.currentBatsman1,
+    required this.currentBatsman2,
+    required this.currentBowler,
+    required this.currentBatsman1Local,
+    required this.currentBatsman2Local,
+    required this.currentBowlerLocal,
   });
 }
 
 class LiveScorePage extends StatefulWidget {
-  const LiveScorePage({Key? key}) : super(key: key);
+  const LiveScorePage({super.key});
 
   @override
   _LiveScorePageState createState() => _LiveScorePageState();
@@ -36,6 +76,8 @@ class LiveScorePage extends StatefulWidget {
 class _LiveScorePageState extends State<LiveScorePage>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
+  final PageNavigationController _pageNavigationController =
+      Get.find<PageNavigationController>();
 
   @override
   void initState() {
@@ -56,37 +98,180 @@ class _LiveScorePageState extends State<LiveScorePage>
 
   final List<LiveMatch> liveMatches = [
     LiveMatch(
-      team1: 'India',
-      team2: 'Australia',
+      team1: 'Mumbai Indians',
+      team2: 'Chennai Super Kings',
       score1: '245/6',
       score2: '182/4',
-      matchStatus: 'India needs 64 runs in 28 balls',
+      matchStatus: 'Mumbai needs 64 runs in 28 balls',
       team1Logo:
-          'https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/teams/logos/IND.png',
+          'https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/MI/Logos/Roundbig/MIroundbig.png',
       team2Logo:
-          'https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/teams/logos/AUS.png',
+          'https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/CSK/Logos/Roundbig/CSKroundbig.png',
+      tournamentName: 'Indian Premier League 2024',
+      venue: 'Wankhede Stadium, Mumbai',
+      matchType: 'T20',
+      team1Players: [
+        Player(
+          name: 'Rohit Mishra',
+          localName: 'रोहित मिश्रा',
+          role: 'Batsman',
+          team: 'Mumbai Indians',
+          imageUrl:
+              'https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/MI/Players/RohitSharma.png',
+        ),
+        Player(
+          name: 'Manav Gore',
+          localName: 'मानव गोरे',
+          role: 'Wicket Keeper',
+          team: 'Mumbai Indians',
+          imageUrl:
+              'https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/MI/Players/IshanKishan.png',
+        ),
+        Player(
+          name: 'Suryakumar Yadav',
+          localName: 'सूर्यकुमार यादव',
+          role: 'Batsman',
+          team: 'Mumbai Indians',
+          imageUrl:
+              'https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/MI/Players/SuryakumarYadav.png',
+        ),
+        Player(
+          name: 'Hardik Pandya',
+          localName: 'हार्दिक पंड्या',
+          role: 'All Rounder',
+          team: 'Mumbai Indians',
+          imageUrl:
+              'https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/MI/Players/HardikPandya.png',
+        ),
+      ],
+      team2Players: [
+        Player(
+          name: 'Ruturaj Gaikwad',
+          localName: 'रुतुराज गायकवाड',
+          role: 'Batsman',
+          team: 'Chennai Super Kings',
+          imageUrl:
+              'https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/CSK/Players/RuturajGaikwad.png',
+        ),
+        Player(
+          name: 'Ravindra Jadeja',
+          localName: 'रविंद्र जडेजा',
+          role: 'All Rounder',
+          team: 'Chennai Super Kings',
+          imageUrl:
+              'https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/CSK/Players/RavindraJadeja.png',
+        ),
+        Player(
+          name: 'Deepak Chahar',
+          localName: 'दीपक चाहर',
+          role: 'Bowler',
+          team: 'Chennai Super Kings',
+          imageUrl:
+              'https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/CSK/Players/DeepakChahar.png',
+        ),
+        Player(
+          name: 'Shivam Dube',
+          localName: 'शिवम दूबे',
+          role: 'All Rounder',
+          team: 'Chennai Super Kings',
+          imageUrl:
+              'https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/CSK/Players/ShivamDube.png',
+        ),
+      ],
+      currentBatsman1: 'Rohit Mishra',
+      currentBatsman2: 'Manav Gore',
+      currentBowler: 'Ravindra Jadeja',
+      currentBatsman1Local: 'रोहित मिश्रा',
+      currentBatsman2Local: 'मानव गोरे',
+      currentBowlerLocal: 'रविंद्र जडेजा',
     ),
     LiveMatch(
-      team1: 'England',
-      team2: 'South Africa',
+      team1: 'Royal Challengers Bangalore',
+      team2: 'Kolkata Knight Riders',
       score1: '198/4',
       score2: '156/3',
-      matchStatus: 'South Africa needs 43 runs in 18 balls',
+      matchStatus: 'KKR needs 43 runs in 18 balls',
       team1Logo:
-          'https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/teams/logos/ENG.png',
+          'https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/RCB/Logos/Roundbig/RCBroundbig.png',
       team2Logo:
-          'https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/teams/logos/SA.png',
-    ),
-    LiveMatch(
-      team1: 'New Zealand',
-      team2: 'Pakistan',
-      score1: '167/8',
-      score2: '134/5',
-      matchStatus: 'Pakistan needs 34 runs in 12 balls',
-      team1Logo:
-          'https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/teams/logos/NZ.png',
-      team2Logo:
-          'https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/teams/logos/PAK.png',
+          'https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/KKR/Logos/Roundbig/KKRroundbig.png',
+      tournamentName: 'Indian Premier League 2024',
+      venue: 'M. Chinnaswamy Stadium, Bangalore',
+      matchType: 'T20',
+      team1Players: [
+        Player(
+          name: 'Virat Kohli',
+          localName: 'विराट कोहली',
+          role: 'Batsman',
+          team: 'Royal Challengers Bangalore',
+          imageUrl:
+              'https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/RCB/Players/ViratKohli.png',
+        ),
+        Player(
+          name: 'Faf du Plessis',
+          localName: 'फाफ डु प्लेसिस',
+          role: 'Batsman',
+          team: 'Royal Challengers Bangalore',
+          imageUrl:
+              'https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/RCB/Players/FafduPlessis.png',
+        ),
+        Player(
+          name: 'Glenn Maxwell',
+          localName: 'ग्लेन मैक्सवेल',
+          role: 'All Rounder',
+          team: 'Royal Challengers Bangalore',
+          imageUrl:
+              'https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/RCB/Players/GlennMaxwell.png',
+        ),
+        Player(
+          name: 'Mohammed Siraj',
+          localName: 'मोहम्मद सिराज',
+          role: 'Bowler',
+          team: 'Royal Challengers Bangalore',
+          imageUrl:
+              'https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/RCB/Players/MohammedSiraj.png',
+        ),
+      ],
+      team2Players: [
+        Player(
+          name: 'Andre Russell',
+          localName: 'एंड्रे रसेल',
+          role: 'All Rounder',
+          team: 'Kolkata Knight Riders',
+          imageUrl:
+              'https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/KKR/Players/AndreRussell.png',
+        ),
+        Player(
+          name: 'Sunil Narine',
+          localName: 'सुनील नारायण',
+          role: 'All Rounder',
+          team: 'Kolkata Knight Riders',
+          imageUrl:
+              'https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/KKR/Players/SunilNarine.png',
+        ),
+        Player(
+          name: 'Varun Chakravarthy',
+          localName: 'वरुण चक्रवर्ती',
+          role: 'Bowler',
+          team: 'Kolkata Knight Riders',
+          imageUrl:
+              'https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/KKR/Players/VarunChakravarthy.png',
+        ),
+        Player(
+          name: 'Venkatesh Iyer',
+          localName: 'वेंकटेश अय्यर',
+          role: 'All Rounder',
+          team: 'Kolkata Knight Riders',
+          imageUrl:
+              'https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/KKR/Players/VenkateshIyer.png',
+        ),
+      ],
+      currentBatsman1: 'Virat Kohli',
+      currentBatsman2: 'Faf du Plessis',
+      currentBowler: 'Andre Russell',
+      currentBatsman1Local: 'विराट कोहली',
+      currentBatsman2Local: 'फाफ डु प्लेसिस',
+      currentBowlerLocal: 'एंड्रे रसेल',
     ),
   ];
 
@@ -111,7 +296,7 @@ class _LiveScorePageState extends State<LiveScorePage>
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [
+                    colors: const [
                       Color(0xFF0A0A0A),
                       Color(0xFF1A1A1A),
                     ],
@@ -152,8 +337,8 @@ class _LiveScorePageState extends State<LiveScorePage>
                         SlideInRight(child: _buildStatsSection(size)),
                         SizedBox(height: size.height * 0.03),
                         FadeInUp(child: _buildCommentarySection(size)),
-              SizedBox(height: size.height * 0.02),
-              const Footer(),
+                        SizedBox(height: size.height * 0.02),
+                        const Footer(),
                       ],
                     ),
                   ),
@@ -166,7 +351,7 @@ class _LiveScorePageState extends State<LiveScorePage>
     );
   }
 
-  Widget _buildMatchItem(int index) {
+    Widget _buildMatchItem(int index) {
     final match = liveMatches[index];
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -174,6 +359,9 @@ class _LiveScorePageState extends State<LiveScorePage>
         delay: Duration(milliseconds: 100 * index),
         child: GestureDetector(
           onTap: () => setState(() => selectedMatchIndex = index),
+          onDoubleTap: () {
+            _pageNavigationController.navigateToSub(1, 0);
+          },
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 300),
             width: MediaQuery.of(context).size.width * 0.3,
@@ -202,9 +390,17 @@ class _LiveScorePageState extends State<LiveScorePage>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
+                  match.tournamentName,
+                  style: GoogleFonts.poppins(
+                    fontSize: getTextSize(0.8),
+                    color: Colors.blue[300],
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
                   '${match.team1} vs ${match.team2}',
                   style: GoogleFonts.poppins(
-                    fontSize: getTextSize(1.2), // reduced from 1.6
+                    fontSize: getTextSize(1.2),
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
@@ -213,8 +409,17 @@ class _LiveScorePageState extends State<LiveScorePage>
                 Text(
                   match.matchStatus,
                   style: GoogleFonts.poppins(
-                    fontSize: getTextSize(0.9), // reduced from 1.2
+                    fontSize: getTextSize(0.9),
                     color: Colors.white70,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  match.venue,
+                  style: GoogleFonts.poppins(
+                    fontSize: getTextSize(0.8),
+                    color: Colors.grey[400],
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -234,7 +439,7 @@ class _LiveScorePageState extends State<LiveScorePage>
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         image: DecorationImage(
-          image: NetworkImage(
+          image: const NetworkImage(
             'https://resources.pulse.icc-cricket.com/ICC/photo/2024/02/09/45713402-c65a-4d42-8344-9fae3c362b6e/GettyImages-1942239871.jpg',
           ),
           fit: BoxFit.cover,
@@ -292,12 +497,12 @@ class _LiveScorePageState extends State<LiveScorePage>
             color: Colors.white70,
           ),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         AnimatedBuilder(
           animation: _controller,
           builder: (context, child) {
             return Container(
-              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
                 color: Colors.green.withOpacity(0.2 + _controller.value * 0.3),
                 borderRadius: BorderRadius.circular(12),
@@ -318,7 +523,7 @@ class _LiveScorePageState extends State<LiveScorePage>
                       shape: BoxShape.circle,
                     ),
                   ),
-                  SizedBox(width: 4),
+                  const SizedBox(width: 4),
                   Text(
                     'LIVE',
                     style: GoogleFonts.poppins(
@@ -338,7 +543,7 @@ class _LiveScorePageState extends State<LiveScorePage>
 
   Widget _buildMatchProgress(LiveMatch match) {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.black26,
         borderRadius: BorderRadius.circular(8),
@@ -353,11 +558,11 @@ class _LiveScorePageState extends State<LiveScorePage>
               fontWeight: FontWeight.bold,
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           LinearProgressIndicator(
             value: 0.75, // Calculate based on match progress
             backgroundColor: Colors.grey[800],
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.indigo),
+            valueColor: const AlwaysStoppedAnimation<Color>(Colors.indigo),
           ),
         ],
       ),
@@ -371,10 +576,10 @@ class _LiveScorePageState extends State<LiveScorePage>
           imageUrl: logoUrl,
           height: getTextSize(4.0),
           width: getTextSize(4.0),
-          placeholder: (context, url) => CircularProgressIndicator(),
-          errorWidget: (context, url, error) => Icon(Icons.error),
+          placeholder: (context, url) => const CircularProgressIndicator(),
+          errorWidget: (context, url, error) => const Icon(Icons.error),
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         Text(
           team,
           style: GoogleFonts.poppins(
@@ -383,7 +588,7 @@ class _LiveScorePageState extends State<LiveScorePage>
             color: Colors.white,
           ),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
           score,
           style: GoogleFonts.robotoMono(
@@ -415,6 +620,7 @@ class _LiveScorePageState extends State<LiveScorePage>
   }
 
   Widget _buildBatsmenStats() {
+    final match = liveMatches[selectedMatchIndex];
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -435,7 +641,7 @@ class _LiveScorePageState extends State<LiveScorePage>
           Text(
             'Batsmen',
             style: GoogleFonts.poppins(
-              fontSize: getTextSize(1.4), // reduced from 2.0
+              fontSize: getTextSize(1.4),
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
@@ -443,12 +649,30 @@ class _LiveScorePageState extends State<LiveScorePage>
           const SizedBox(height: 16),
           ListView(
             shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
+            physics: const NeverScrollableScrollPhysics(),
             children: [
-              _buildBatsmanRow('Rohit Sharma*', '86', '52', '8', '4'),
-              _buildBatsmanRow('Virat Kohli', '45', '38', '4', '1'),
-              _buildBatsmanRow('KL Rahul', '32', '28', '3', '1'),
-              _buildBatsmanRow('Hardik Pandya', '28', '18', '2', '2'),
+              _buildBatsmanRow(
+                match.currentBatsman1,
+                match.currentBatsman1Local,
+                '86',
+                '52',
+                '8',
+                '4',
+                match.team1Players
+                    .firstWhere((p) => p.name == match.currentBatsman1)
+                    .imageUrl,
+              ),
+              _buildBatsmanRow(
+                match.currentBatsman2,
+                match.currentBatsman2Local,
+                '45',
+                '38',
+                '4',
+                '1',
+                match.team1Players
+                    .firstWhere((p) => p.name == match.currentBatsman2)
+                    .imageUrl,
+              ),
             ],
           ),
         ],
@@ -457,20 +681,64 @@ class _LiveScorePageState extends State<LiveScorePage>
   }
 
   Widget _buildBatsmanRow(
-      String name, String runs, String balls, String fours, String sixes) {
+    String name,
+    String localName,
+    String runs,
+    String balls,
+    String fours,
+    String sixes,
+    String imageUrl,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Expanded(
-            flex: 2,
-            child: Text(
-              name,
-              style: GoogleFonts.poppins(
-                fontSize: getTextSize(1.0), // reduced from 1.4
-                color: Colors.white,
-              ),
+            flex: 3,
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: getTextSize(1.2),
+                  backgroundColor: Colors.grey[800],
+                  child: ClipOval(
+                    child: CachedNetworkImage(
+                      imageUrl: imageUrl,
+                      width: getTextSize(2.4),
+                      height: getTextSize(2.4),
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) =>
+                          const CircularProgressIndicator(),
+                      errorWidget: (context, url, error) => Icon(
+                        Icons.person,
+                        size: getTextSize(1.8),
+                        color: Colors.grey[400],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: GoogleFonts.poppins(
+                        fontSize: getTextSize(1.0),
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      localName,
+                      style: GoogleFonts.poppins(
+                        fontSize: getTextSize(0.8),
+                        color: Colors.grey[400],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
           Expanded(
@@ -481,28 +749,28 @@ class _LiveScorePageState extends State<LiveScorePage>
                 Text(
                   runs,
                   style: GoogleFonts.robotoMono(
-                    fontSize: getTextSize(1.0), // reduced from 1.4
+                    fontSize: getTextSize(1.0),
                     color: Colors.white,
                   ),
                 ),
                 Text(
                   '($balls)',
                   style: GoogleFonts.robotoMono(
-                    fontSize: getTextSize(0.9), // reduced from 1.2
+                    fontSize: getTextSize(0.9),
                     color: Colors.white70,
                   ),
                 ),
                 Text(
                   '${fours}x4',
                   style: GoogleFonts.robotoMono(
-                    fontSize: getTextSize(0.9), // reduced from 1.2
+                    fontSize: getTextSize(0.9),
                     color: Colors.blue[300],
                   ),
                 ),
                 Text(
                   '${sixes}x6',
                   style: GoogleFonts.robotoMono(
-                    fontSize: getTextSize(0.9), // reduced from 1.2
+                    fontSize: getTextSize(0.9),
                     color: Colors.purple[300],
                   ),
                 ),
@@ -515,6 +783,7 @@ class _LiveScorePageState extends State<LiveScorePage>
   }
 
   Widget _buildBowlerStats() {
+    final match = liveMatches[selectedMatchIndex];
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -533,9 +802,9 @@ class _LiveScorePageState extends State<LiveScorePage>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Bowlers',
+            'Bowler',
             style: GoogleFonts.poppins(
-              fontSize: getTextSize(1.4), // reduced from 2.0
+              fontSize: getTextSize(1.4),
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
@@ -543,13 +812,20 @@ class _LiveScorePageState extends State<LiveScorePage>
           const SizedBox(height: 16),
           ListView(
             shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
+            physics: const NeverScrollableScrollPhysics(),
             children: [
               _buildBowlerRow(
-                  'Mitchell Starc*', '4.0', '0', '45', '2', '11.25'),
-              _buildBowlerRow('Pat Cummins', '4.0', '0', '38', '1', '9.50'),
-              _buildBowlerRow('Josh Hazlewood', '3.0', '0', '32', '1', '10.67'),
-              _buildBowlerRow('Nathan Lyon', '3.0', '0', '28', '0', '9.33'),
+                match.currentBowler,
+                match.currentBowlerLocal,
+                '4.0',
+                '0',
+                '45',
+                '2',
+                '11.25',
+                match.team2Players
+                    .firstWhere((p) => p.name == match.currentBowler)
+                    .imageUrl,
+              ),
             ],
           ),
         ],
@@ -557,21 +833,66 @@ class _LiveScorePageState extends State<LiveScorePage>
     );
   }
 
-  Widget _buildBowlerRow(String name, String overs, String maidens, String runs,
-      String wickets, String economy) {
+  Widget _buildBowlerRow(
+    String name,
+    String localName,
+    String overs,
+    String maidens,
+    String runs,
+    String wickets,
+    String economy,
+    String imageUrl,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Expanded(
-            flex: 2,
-            child: Text(
-              name,
-              style: GoogleFonts.poppins(
-                fontSize: getTextSize(1.0), // reduced from 1.4
-                color: Colors.white,
-              ),
+            flex: 3,
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: getTextSize(1.2),
+                  backgroundColor: Colors.grey[800],
+                  child: ClipOval(
+                    child: CachedNetworkImage(
+                      imageUrl: imageUrl,
+                      width: getTextSize(2.4),
+                      height: getTextSize(2.4),
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) =>
+                          const CircularProgressIndicator(),
+                      errorWidget: (context, url, error) => Icon(
+                        Icons.person,
+                        size: getTextSize(1.8),
+                        color: Colors.grey[400],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: GoogleFonts.poppins(
+                        fontSize: getTextSize(1.0),
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      localName,
+                      style: GoogleFonts.poppins(
+                        fontSize: getTextSize(0.8),
+                        color: Colors.grey[400],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
           Expanded(
@@ -582,14 +903,14 @@ class _LiveScorePageState extends State<LiveScorePage>
                 Text(
                   '$overs-$maidens-$runs-$wickets',
                   style: GoogleFonts.robotoMono(
-                    fontSize: getTextSize(1.0), // reduced from 1.4
+                    fontSize: getTextSize(1.0),
                     color: Colors.white,
                   ),
                 ),
                 Text(
                   'Econ: $economy',
                   style: GoogleFonts.robotoMono(
-                    fontSize: getTextSize(0.9), // reduced from 1.2
+                    fontSize: getTextSize(0.9),
                     color: _getEconomyColor(double.parse(economy)),
                   ),
                 ),
@@ -613,7 +934,7 @@ class _LiveScorePageState extends State<LiveScorePage>
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         image: DecorationImage(
-          image: NetworkImage(
+          image: const NetworkImage(
             'https://resources.pulse.icc-cricket.com/ICC/photo/2024/02/08/3d7b5e7f-7f20-447d-8fb3-77dd252c9e98/Rohit-Sharma.jpg',
           ),
           fit: BoxFit.cover,
@@ -649,7 +970,7 @@ class _LiveScorePageState extends State<LiveScorePage>
           const SizedBox(height: 16),
           ListView(
             shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
+            physics: const NeverScrollableScrollPhysics(),
             children: [
               _buildCommentaryItem('19.6',
                   'SIX! Rohit Sharma finishes off in style!', Colors.purple),
@@ -716,11 +1037,11 @@ class BallByBallView extends StatelessWidget {
   final Color color;
 
   const BallByBallView({
-    Key? key,
+    super.key,
     required this.delivery,
     required this.event,
     required this.color,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -3,20 +3,24 @@
 import 'dart:developer';
 
 import 'package:cricket_management/controllers/page_controller.dart';
+import 'package:cricket_management/controllers/profile_controller.dart';
 import 'package:cricket_management/screens/HomeScreens/HomeScreen.dart';
 import 'package:cricket_management/screens/LiveScore/live_score_page.dart';
+import 'package:cricket_management/screens/LiveScore/match_detail_screen.dart';
 import 'package:cricket_management/screens/Notification/notification_screen.dart';
 import 'package:cricket_management/screens/Settings/settings_page.dart';
 import 'package:cricket_management/screens/Statistics/tournament_statistics_screen.dart';
 import 'package:cricket_management/screens/Tournament/tournament_detail_screen.dart';
 import 'package:cricket_management/screens/Tournament/tournament_screen.dart';
+import 'package:cricket_management/screens/login_screen.dart';
+import 'package:cricket_management/service/auth_sharedP_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({Key? key}) : super(key: key);
+  const DashboardScreen({super.key});
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -27,6 +31,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     with SingleTickerProviderStateMixin {
   final PageNavigationController pageController =
       Get.put(PageNavigationController());
+  final ProfileController profileController = Get.put(ProfileController());
 
   int selectedPageIndex = 0;
 
@@ -36,39 +41,26 @@ class _DashboardScreenState extends State<DashboardScreen>
   late Animation<double> _fadeAnimation;
 
   List<List> subPages = [
+    [],
     [
-      //HomePages
+      const MatchDetailScreen(matchInfo: {
+        "match_id": "1",
+        "match_type": "ODI",
+      })
     ],
     [
-      // LiveScorePage
+      const TournamentDetailScreen(),
+      const MatchDetailScreen(matchInfo: {}),
     ],
-    [
-      // TournamentScreen
-      const TournamentDetailScreen(
-        tournament: {
-          'name': 'IPL 2024',
-          'image':
-              'https://assets.bcci.tv/bcci/photos/7000/04453927-87d4-4e7e-b938-d0e6c463bca8.jpg',
-          'teams': '10 ',
-          'duration': '2 Months'
-        },
-      ),
-    ],
-    [
-      // NotificationScreen
-    ],
-    [
-      // TournamentStatisticsScreen
-    ],
-    [
-      // SettingsPage
-    ],
+    [], // NotificationScreen
+    [], // TournamentStatisticsScreen
+    [],
   ];
 
   List<Widget> pages = [
-    const Homescreen(),
+    Homescreen(),
     const LiveScorePage(),
-    TournamentScreen(),
+    const TournamentScreen(),
     const NotificationScreen(), // Add this line
     TournamentStatisticsScreen(),
     const SettingsPage(),
@@ -77,7 +69,8 @@ class _DashboardScreenState extends State<DashboardScreen>
   @override
   void initState() {
     super.initState();
-
+    initParts();
+    // Initialize the page controller
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
@@ -90,6 +83,10 @@ class _DashboardScreenState extends State<DashboardScreen>
       ),
     );
     _controller.forward();
+  }
+
+  void initParts() async {
+    await AuthSharedP().getAdminStatus();
   }
 
   @override
@@ -148,8 +145,8 @@ class _DashboardScreenState extends State<DashboardScreen>
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            const Color(0xFF1B1E25),
-            const Color(0xFF242730),
+            Color(0xFF1B1E25),
+            Color(0xFF242730),
           ],
         ),
         boxShadow: [
@@ -248,49 +245,88 @@ class _DashboardScreenState extends State<DashboardScreen>
             ),
             child: Column(
               children: [
-                const CircleAvatar(
-                  radius: 25,
-                  backgroundColor: Colors.white24,
-                  backgroundImage: NetworkImage(
-                    'https://via.placeholder.com/100x100.png?text=Avatar',
-                  ),
-                ),
-                SizedBox(height: mq.size.height * 0.015),
-                Text(
-                  "User Name",
-                  style: GoogleFonts.poppins(
-                    fontSize: mq.size.width * 0.011,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.white,
-                  ),
-                ),
-                SizedBox(height: mq.size.height * 0.01),
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: mq.size.width * 0.01,
-                    vertical: mq.size.height * 0.008,
-                  ),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    color: Colors.white.withOpacity(0.1),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        FontAwesomeIcons.signOutAlt,
-                        color: Colors.white70,
-                        size: mq.size.width * 0.01,
+                Builder(builder: (context) {
+                  return Obx(
+                    () => CircleAvatar(
+                      radius: 25,
+                      backgroundColor: Colors.white24,
+                      backgroundImage: NetworkImage(
+                        profileController.profileData["imgUrl"] ?? "",
                       ),
-                      SizedBox(width: mq.size.width * 0.005),
-                      Text(
-                        "Logout",
-                        style: GoogleFonts.poppins(
-                          color: Colors.white70,
-                          fontSize: mq.size.width * 0.009,
+                    ),
+                  );
+                }),
+                SizedBox(height: mq.size.height * 0.015),
+                Obx(() => Text(
+                      profileController.profileData["name"] ?? "Guest",
+                      style: GoogleFonts.poppins(
+                        fontSize: mq.size.width * 0.011,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
+                      ),
+                    )),
+                SizedBox(height: mq.size.height * 0.01),
+                MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    child: GestureDetector(
+                      onTap: () async {
+                        AuthSharedP authSharedP = AuthSharedP();
+                        authSharedP.clear();
+                        log("Admin status : ${await authSharedP.getAdminStatus()}");
+                        log("Admin status : ${AuthSharedP.isAdmin}");
+
+                        if (mounted) {
+                          Navigator.pushNamedAndRemoveUntil(
+                            context,
+                            '/login',
+                            (route) => false,
+                          );
+                        }
+                      },
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: mq.size.width * 0.01,
+                          vertical: mq.size.height * 0.008,
+                        ),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.red.withOpacity(0.4),
+                              Colors.red.withOpacity(0.2),
+                            ],
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.red.withOpacity(0.1),
+                              blurRadius: 8,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              FontAwesomeIcons.signOutAlt,
+                              color: Colors.white.withOpacity(0.9),
+                              size: mq.size.width * 0.01,
+                            ),
+                            SizedBox(width: mq.size.width * 0.005),
+                            Text(
+                              "Logout",
+                              style: GoogleFonts.poppins(
+                                color: Colors.white.withOpacity(0.9),
+                                fontSize: mq.size.width * 0.009,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ],

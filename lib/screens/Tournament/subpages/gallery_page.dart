@@ -1,11 +1,27 @@
+import 'dart:convert';
+import 'dart:developer';
+
+import 'package:cricket_management/model/gallerymodel.dart';
+import 'package:cricket_management/screens/Tournament/tournament_screen.dart';
+import 'package:cricket_management/service/auth_sharedP_service.dart';
+import 'package:cricket_management/service/cloudinary_service.dart';
+import 'package:cricket_management/service/tournament/gallery_service.dart';
 import 'package:cricket_management/widgets/footer.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'dart:html' as html; // Add this import for web
+import 'dart:typed_data';
+import 'package:http/http.dart' as http;
+
+import 'package:flutter/foundation.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart'; // Add this import for kIsWeb
 
 class GallaryPage extends StatefulWidget {
-  const GallaryPage({Key? key}) : super(key: key);
+  const GallaryPage({super.key});
 
   @override
   State<GallaryPage> createState() => _GallaryPageState();
@@ -14,60 +30,49 @@ class GallaryPage extends StatefulWidget {
 class _GallaryPageState extends State<GallaryPage> {
   late double width;
   late double height;
-  int? selectedImageIndex;
+  final List<String> _selectedImages = [];
+  List<Uint8List>? tempImages;
 
-  // Sample gallery images - in a real app, these would come from an API or database
-  final List<Map<String, dynamic>> galleryImages = [
-    {
-      'imageUrl':
-          'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8Y3JpY2tldHxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=800&q=60',
-      'title': 'Opening Ceremony',
-      'date': '22 Mar 2024',
-    },
-    {
-      'imageUrl':
-          'https://images.unsplash.com/photo-1531415074968-036ba1b575da?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8Y3JpY2tldHxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=800&q=60',
-      'title': 'Match Highlights',
-      'date': '23 Mar 2024',
-    },
-    {
-      'imageUrl':
-          'https://images.unsplash.com/photo-1624880357913-a8539238245b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fGNyaWNrZXR8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=800&q=60',
-      'title': 'Team Celebration',
-      'date': '24 Mar 2024',
-    },
-    {
-      'imageUrl':
-          'https://images.unsplash.com/photo-1629285483773-6b5cde5482c6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTR8fGNyaWNrZXR8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=800&q=60',
-      'title': 'Award Ceremony',
-      'date': '25 Mar 2024',
-    },
-    {
-      'imageUrl':
-          'https://images.unsplash.com/photo-1626016753965-0f95c8b3afe5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjB8fGNyaWNrZXR8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=800&q=60',
-      'title': 'Team Photo',
-      'date': '22 Mar 2024',
-    },
-    {
-      'imageUrl':
-          'https://images.unsplash.com/photo-1580748141549-71748dbe0bdc?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8Y3JpY2tldHxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=800&q=60',
-      'title': 'Practice Session',
-      'date': '21 Mar 2024',
-    },
-    {
-      'imageUrl':
-          'https://images.unsplash.com/photo-1589801258579-18e091f4ca26?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTZ8fGNyaWNrZXR8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=800&q=60',
-      'title': 'Fan Moments',
-      'date': '23 Mar 2024',
-    },
-    {
-      'imageUrl':
-          'https://images.unsplash.com/photo-1531415074968-036ba1b575da?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8Y3JpY2tldHxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=800&q=60',
-      'title': 'Stadium View',
-      'date': '24 Mar 2024',
-    },
-  ];
+  final List<String> galleryImages = [];
 
+  Future<void> _pickImages() async {
+    try {
+      html.FileUploadInputElement uploadInput = html.FileUploadInputElement();
+      uploadInput.accept = 'image/*';
+      uploadInput.multiple = true;
+      uploadInput.click();
+
+      uploadInput.onChange.listen((e) async {
+        final files = uploadInput.files;
+        if (files != null) {
+          tempImages = <Uint8List>[];
+          for (var file in files) {
+            html.FileReader reader = html.FileReader();
+            reader.readAsArrayBuffer(file);
+            await reader.onLoadEnd.first;
+            Uint8List bytes = reader.result as Uint8List;
+            tempImages!.add(bytes);
+          }
+          _showImagePreviewDialog(tempImages!);
+        }
+      });
+    } catch (e) {
+      log(e.toString());
+    }
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _fetchGalleryImages();
+  }
+
+  // Add this to your state class variables
+  bool _isLoading = false;
+  bool _isAddingImages = false;
+
+  // Update the build method
   @override
   Widget build(BuildContext context) {
     width = MediaQuery.of(context).size.width;
@@ -75,176 +80,239 @@ class _GallaryPageState extends State<GallaryPage> {
 
     return FadeInUp(
       duration: const Duration(milliseconds: 600),
-      child: Container(
-        margin: EdgeInsets.symmetric(
-            horizontal: width * 0.02, vertical: height * 0.02),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildGalleryHeader(),
-            SizedBox(height: height * 0.02),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
-                crossAxisSpacing: width * 0.015,
-                mainAxisSpacing: height * 0.02,
-                childAspectRatio: 1.0,
+      child: _isLoading
+          ? Center(
+              child: LoadingAnimationWidget.staggeredDotsWave(
+                color: Colors.blue,
+                size: width * 0.02,
               ),
-              itemCount: galleryImages.length,
-              itemBuilder: (context, index) => _buildGalleryItem(index),
+            )
+          : Container(
+              margin: EdgeInsets.symmetric(
+                  horizontal: width * 0.02, vertical: height * 0.02),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: height * 0.02),
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4,
+                      crossAxisSpacing: width * 0.015,
+                      mainAxisSpacing: height * 0.02,
+                      childAspectRatio: 1.0,
+                    ),
+                    itemCount:
+                        _selectedImages.length + galleryImages.length + 1,
+                    itemBuilder: (context, index) {
+                      if (index == 0) {
+                        return _buildAddPhotoContainer();
+                      }
+                      return _buildGalleryItem(index - 1);
+                    },
+                  ),
+                  SizedBox(height: height * 0.02),
+                  const Footer(),
+                ],
+              ),
             ),
-            SizedBox(height: height * 0.02),
-            const Footer(),
-            SizedBox(height: height * 0.02),
-          ],
-        ),
-      ),
     );
   }
 
-  Widget _buildGalleryHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        const SizedBox(),
-        Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: width * 0.015,
-            vertical: height * 0.008,
+  // Update the addImages method
+  void addImages() async {
+    try {
+      setState(() {
+        _isAddingImages = true;
+      });
+
+      List<String> imagesData =
+          await CloudinaryService().uploadMultipleImages(tempImages!);
+      final galleryModel =
+          Gallerymodel(tournamentId: tournamentId, photos: imagesData);
+      await GalleryService().addImages(galleryModel.toJson()).then((val) {
+        if (val) {
+          setState(() {
+            Navigator.pop(context); // Close the dialog first
+
+            _selectedImages.addAll(imagesData);
+          });
+        }
+      });
+    } catch (e) {
+      log("Exception occure while add Images: $e");
+    } finally {
+      setState(() {
+        _isAddingImages = false;
+      });
+    }
+  }
+
+  // Update the _fetchGalleryImages method
+  void _fetchGalleryImages() async {
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      await GalleryService().fetchGalleryImages(tournamentId!).then((val) {
+        setState(() {
+          _selectedImages.addAll(val);
+        });
+      });
+      log("Gallery Images: $_selectedImages");
+    } catch (e) {
+      log("Error fetching gallery images: $e");
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  // Update the _showImagePreviewDialog method to show loading while adding
+  void _showImagePreviewDialog(List<Uint8List> images) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color.fromARGB(255, 15, 14, 14),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        title: Text(
+          'Selected Images',
+          style: GoogleFonts.poppins(
+            color: Colors.white,
+            fontSize: width * 0.015,
+            fontWeight: FontWeight.bold,
           ),
+        ),
+        content: Container(
+          width: width * 0.6, // Reduced from 0.8
+          height: height * 0.5, // Reduced from 0.6
           decoration: BoxDecoration(
-            color: Colors.blue.withOpacity(0.2),
+            color: Colors.grey[900],
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Row(
-            children: [
-              Icon(
-                Icons.photo_library,
-                color: Colors.blue,
-                size: width * 0.012,
+          child: Padding(
+            padding: EdgeInsets.all(width * 0.01),
+            child: GridView.builder(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 4, // Increased from 3
+                crossAxisSpacing: width * 0.01,
+                mainAxisSpacing: width * 0.01,
+                childAspectRatio: 1.0,
               ),
-              SizedBox(width: width * 0.005),
-              Text(
-                "${galleryImages.length} Photos",
-                style: GoogleFonts.poppins(
-                  color: Colors.blue,
-                  fontSize: width * 0.01,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
+              itemCount: images.length,
+              itemBuilder: (context, index) {
+                return Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: Colors.blue.withOpacity(0.3),
+                      width: 1,
+                    ),
+                    image: DecorationImage(
+                      image: MemoryImage(images[index]),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
         ),
-      ],
-    );
-  }
-
-  Widget _buildGalleryGrid() {
-    return GridView.builder(
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4,
-        crossAxisSpacing: width * 0.015,
-        mainAxisSpacing: height * 0.02,
-        childAspectRatio: 1.0,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            style: TextButton.styleFrom(
+              backgroundColor: Colors.grey[800],
+              padding: EdgeInsets.symmetric(
+                horizontal: width * 0.015,
+                vertical: height * 0.01,
+              ),
+            ),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.poppins(
+                color: Colors.white70,
+                fontSize: width * 0.01,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: addImages,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              padding: EdgeInsets.symmetric(
+                horizontal: width * 0.015,
+                vertical: height * 0.01,
+              ),
+            ),
+            child: (_isAddingImages)
+                ? LoadingAnimationWidget.staggeredDotsWave(
+                    color: Colors.white,
+                    size: width * 0.02,
+                  )
+                : Text(
+                    'Add Images',
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontSize: width * 0.01,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+          ),
+        ],
       ),
-      itemCount: galleryImages.length,
-      itemBuilder: (context, index) {
-        return _buildGalleryItem(index);
-      },
     );
   }
 
   Widget _buildGalleryItem(int index) {
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          selectedImageIndex = index;
-        });
-        _showImagePreview(context, index);
-      },
-      child: FadeInUp(
-        delay: Duration(milliseconds: 100 * index),
-        duration: const Duration(milliseconds: 500),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 5,
-                offset: const Offset(0, 3),
+    return FadeInUp(
+      delay: Duration(milliseconds: 100 * index),
+      duration: const Duration(milliseconds: 500),
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color.fromARGB(255, 15, 14, 14).withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 5,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: CachedNetworkImage(
+            imageUrl: _selectedImages[index],
+            fit: BoxFit.cover,
+            progressIndicatorBuilder: (context, url, progress) => Center(
+              child: CircularProgressIndicator(
+                value: progress.progress,
+                valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
               ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                CachedNetworkImage(
-                  imageUrl: galleryImages[index]['imageUrl'],
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) => Container(
-                    color: Colors.grey[900],
-                    child: const Center(
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
-                      ),
+            ),
+            errorWidget: (context, url, error) => Container(
+              color: Colors.grey[900],
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    color: Colors.red,
+                    size: width * 0.05,
+                  ),
+                  SizedBox(height: height * 0.01),
+                  Text(
+                    'Failed to load image',
+                    style: GoogleFonts.poppins(
+                      color: Colors.white70,
+                      fontSize: width * 0.01,
                     ),
                   ),
-                  errorWidget: (context, url, error) => Container(
-                    color: Colors.grey[900],
-                    child: const Icon(Icons.error, color: Colors.red),
-                  ),
-                ),
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: width * 0.01,
-                      vertical: height * 0.005,
-                    ),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.bottomCenter,
-                        end: Alignment.topCenter,
-                        colors: [
-                          Colors.black.withOpacity(0.8),
-                          Colors.transparent,
-                        ],
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          galleryImages[index]['title'],
-                          style: GoogleFonts.poppins(
-                            color: Colors.white,
-                            fontSize: width * 0.009,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          galleryImages[index]['date'],
-                          style: GoogleFonts.poppins(
-                            color: Colors.white70,
-                            fontSize: width * 0.008,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -252,121 +320,34 @@ class _GallaryPageState extends State<GallaryPage> {
     );
   }
 
-  void _showImagePreview(BuildContext context, int index) {
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        insetPadding: EdgeInsets.all(width * 0.02),
-        child: Container(
-          width: width * 0.7,
-          height: height * 0.8,
-          decoration: BoxDecoration(
-            color: const Color(0xFF1E1E1E),
-            borderRadius: BorderRadius.circular(15),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.3),
-                blurRadius: 15,
-                offset: const Offset(0, 5),
-              ),
-            ],
+  // Modify _buildAddPhotoContainer
+  Widget _buildAddPhotoContainer() {
+    return GestureDetector(
+      onTap: _pickImages,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.blue.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.blue.withOpacity(0.3),
+            width: 1,
           ),
+        ),
+        child: Center(
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Padding(
-                padding: EdgeInsets.all(width * 0.01),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      galleryImages[index]['title'],
-                      style: GoogleFonts.poppins(
-                        color: Colors.white,
-                        fontSize: width * 0.015,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: Icon(
-                        Icons.close,
-                        color: Colors.white,
-                        size: width * 0.015,
-                      ),
-                    ),
-                  ],
-                ),
+              Icon(
+                Icons.add_a_photo,
+                color: Colors.blue,
+                size: width * 0.03,
               ),
-              Expanded(
-                child: InteractiveViewer(
-                  minScale: 0.5,
-                  maxScale: 3.0,
-                  child: CachedNetworkImage(
-                    imageUrl: galleryImages[index]['imageUrl'],
-                    fit: BoxFit.contain,
-                    placeholder: (context, url) => const Center(
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
-                      ),
-                    ),
-                    errorWidget: (context, url, error) => const Icon(
-                      Icons.error,
-                      color: Colors.red,
-                      size: 50,
-                    ),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.all(width * 0.01),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      onPressed: index > 0
-                          ? () {
-                              setState(() {
-                                selectedImageIndex = index - 1;
-                              });
-                              Navigator.pop(context);
-                              _showImagePreview(context, index - 1);
-                            }
-                          : null,
-                      icon: Icon(
-                        Icons.arrow_back_ios,
-                        color: index > 0 ? Colors.white : Colors.grey,
-                        size: width * 0.015,
-                      ),
-                    ),
-                    SizedBox(width: width * 0.02),
-                    Text(
-                      "${index + 1} / ${galleryImages.length}",
-                      style: GoogleFonts.poppins(
-                        color: Colors.white,
-                        fontSize: width * 0.012,
-                      ),
-                    ),
-                    SizedBox(width: width * 0.02),
-                    IconButton(
-                      onPressed: index < galleryImages.length - 1
-                          ? () {
-                              setState(() {
-                                selectedImageIndex = index + 1;
-                              });
-                              Navigator.pop(context);
-                              _showImagePreview(context, index + 1);
-                            }
-                          : null,
-                      icon: Icon(
-                        Icons.arrow_forward_ios,
-                        color: index < galleryImages.length - 1
-                            ? Colors.white
-                            : Colors.grey,
-                        size: width * 0.015,
-                      ),
-                    ),
-                  ],
+              SizedBox(height: height * 0.01),
+              Text(
+                'Add Photos',
+                style: GoogleFonts.poppins(
+                  color: Colors.blue,
+                  fontSize: width * 0.01,
                 ),
               ),
             ],

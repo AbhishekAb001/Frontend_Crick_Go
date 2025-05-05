@@ -6,7 +6,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dropdown_button2/dropdown_button2.dart'; // Add this package
 
 class LeaderboardPage extends StatefulWidget {
-  const LeaderboardPage({Key? key}) : super(key: key);
+  const LeaderboardPage({super.key});
 
   @override
   State<LeaderboardPage> createState() => _LeaderboardPageState();
@@ -138,8 +138,8 @@ class _LeaderboardPageState extends State<LeaderboardPage>
                           offset: const Offset(0, 0),
                           scrollbarTheme: ScrollbarThemeData(
                             radius: const Radius.circular(40),
-                            thickness: MaterialStateProperty.all(6),
-                            thumbVisibility: MaterialStateProperty.all(true),
+                            thickness: WidgetStateProperty.all(6),
+                            thumbVisibility: WidgetStateProperty.all(true),
                           ),
                         ),
                         menuItemStyleData: MenuItemStyleData(
@@ -185,7 +185,7 @@ class _LeaderboardPageState extends State<LeaderboardPage>
                           });
                         },
                         buttonStyleData: ButtonStyleData(
-                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
                           height: height * 0.05,
                           width: width * 0.15,
                           decoration: BoxDecoration(
@@ -213,8 +213,8 @@ class _LeaderboardPageState extends State<LeaderboardPage>
                           offset: const Offset(0, 0),
                           scrollbarTheme: ScrollbarThemeData(
                             radius: const Radius.circular(40),
-                            thickness: MaterialStateProperty.all(6),
-                            thumbVisibility: MaterialStateProperty.all(true),
+                            thickness: WidgetStateProperty.all(6),
+                            thumbVisibility: WidgetStateProperty.all(true),
                           ),
                         ),
                         menuItemStyleData: MenuItemStyleData(
@@ -445,7 +445,7 @@ class _LeaderboardPageState extends State<LeaderboardPage>
                         color: Colors.blue.withOpacity(0.7),
                         size: width * 0.008,
                       ),
-                      SizedBox(width: 4),
+                      const SizedBox(width: 4),
                       Text(
                         player['team'] ?? "Team",
                         style: GoogleFonts.poppins(
